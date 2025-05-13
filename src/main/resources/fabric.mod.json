@@ -1,0 +1,50 @@
+{
+	"schemaVersion": 1,
+	"id": "rmsc-mod",
+	"version": "${version}",
+	"name": "RMSC Mod",
+	"description": "This mod provides the ability to communicate in-game data with reality.",
+	"authors": [
+		"Voemp"
+	],
+	"contact": {
+		"homepage": "https://fabricmc.net/",
+		"sources": "https://github.com/Voemp/rmsc-mod"
+	},
+	"license": "MIT",
+	"icon": "assets/rmsc-mod/icon.png",
+	"environment": "*",
+	"entrypoints": {
+		"main": [
+			{
+				"value": "top.voemp.rmscmod.RMSCMod",
+				"adapter": "kotlin"
+			}
+		],
+		"fabric-datagen": [
+			{
+				"value": "top.voemp.rmscmod.RMSCModDataGenerator",
+				"adapter": "kotlin"
+			}
+		],
+		"client": [
+			{
+				"value": "top.voemp.rmscmod.RMSCModClient",
+				"adapter": "kotlin"
+			}
+		]
+	},
+	"mixins": [
+		"rmsc-mod.mixins.json"
+	],
+	"depends": {
+		"fabricloader": ">=0.16.14",
+		"minecraft": "~1.21.1",
+		"java": ">=21",
+		"fabric-api": "*",
+		"fabric-language-kotlin": "*"
+	},
+	"suggests": {
+		"another-mod": "*"
+	}
+}
