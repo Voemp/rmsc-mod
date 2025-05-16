@@ -8,10 +8,11 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.gui.widget.TextFieldWidget
 import net.minecraft.text.Text
+import top.voemp.rmscmod.option.ModKeyBinding
 import top.voemp.rmscmod.selection.SelectionManager
 
 @Environment(EnvType.CLIENT)
-object ModMenuScreen : Screen(Text.translatable("gui.rmscmod.menu.title")) {
+class ModMenuScreen : Screen(Text.translatable("rmscmod.menu.title")) {
     private lateinit var nameField: TextFieldWidget
     private lateinit var saveButton: ButtonWidget
     private lateinit var cancelButton: ButtonWidget
@@ -63,7 +64,7 @@ object ModMenuScreen : Screen(Text.translatable("gui.rmscmod.menu.title")) {
         if (SelectionManager.hasAreaSelection()) {
             context.drawCenteredTextWithShadow(
                 textRenderer,
-                Text.literal("当前选中区域：${SelectionManager.pointA} -> ${SelectionManager.pointB}"),
+                Text.literal("当前选中区域：${SelectionManager.point1} -> ${SelectionManager.point2}"),
                 width / 2,
                 height / 2 - 45,
                 0xAAAAAA
@@ -81,6 +82,10 @@ object ModMenuScreen : Screen(Text.translatable("gui.rmscmod.menu.title")) {
     }
 
     override fun keyPressed(keyCode: Int, scanCode: Int, modifiers: Int): Boolean {
+        if (ModKeyBinding.OPEN_MENU.matchesKey(keyCode, scanCode)) {
+            MinecraftClient.getInstance().setScreen(null)
+            return true
+        }
         return nameField.keyPressed(keyCode, scanCode, modifiers) || super.keyPressed(keyCode, scanCode, modifiers)
     }
 

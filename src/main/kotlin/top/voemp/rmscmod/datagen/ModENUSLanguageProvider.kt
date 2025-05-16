@@ -17,5 +17,7 @@ class ModENUSLanguageProvider : FabricLanguageProvider {
         translationBuilder: TranslationBuilder?
     ) {
         translationBuilder?.add("gui.rmscmod.menu.title", "RMSC Menu")
+        translationBuilder?.add("key.rmscmod.open_menu", "Open RMSC Menu")
+        translationBuilder?.add("category.rmscmod", "RMSC Mod")
     }
 }

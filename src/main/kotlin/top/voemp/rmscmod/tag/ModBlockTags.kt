@@ -13,6 +13,5 @@ object ModBlockTags {
         return TagKey.of<Block?>(RegistryKeys.BLOCK, Identifier.of(RMSCMod.MOD_ID, id))
     }
 
-    fun registerModBlockTags() {
-    }
+    fun registerModBlockTags() {}
 }
