@@ -72,7 +72,7 @@ class ModMenuScreen : Screen(Text.translatable("rmscmod.menu.title")) {
         } else if (SelectionManager.hasSwitchSelection()) {
             context.drawCenteredTextWithShadow(
                 textRenderer,
-                Text.literal("当前选中拉杆：${SelectionManager.switchPosList}"),
+                Text.literal("当前选中拉杆：${SelectionManager.switchPosSet}"),
                 width / 2,
                 height / 2 - 45,
                 0xAAAAAA
