@@ -16,8 +16,13 @@ class ModENUSLanguageProvider : FabricLanguageProvider {
         registryLookup: RegistryWrapper.WrapperLookup?,
         translationBuilder: TranslationBuilder?
     ) {
-        translationBuilder?.add("gui.rmscmod.menu.title", "RMSC Menu")
-        translationBuilder?.add("key.rmscmod.open_menu", "Open RMSC Menu")
+        translationBuilder?.add("menu.rmscmod.title", "RMSC Menu")
+        translationBuilder?.add("menu.rmscmod.tab.save.title", "Save Config")
+        translationBuilder?.add("menu.rmscmod.tab.save.enterName", "Config Name")
+        translationBuilder?.add("menu.rmscmod.tab.save.clearAreaSelection", "Clear Area Selection")
+        translationBuilder?.add("menu.rmscmod.tab.save.clearSwitchSelection", "Clear Switch Selection")
+        translationBuilder?.add("config.rmscmod.newConfig", "New Config")
+        translationBuilder?.add("key.rmscmod.openMenu", "Open RMSC Menu")
         translationBuilder?.add("category.rmscmod", "RMSC Mod")
     }
 }

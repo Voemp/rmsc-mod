@@ -8,7 +8,7 @@ import org.lwjgl.glfw.GLFW
 object ModKeyBinding {
     val OPEN_MENU: KeyBinding = KeyBindingHelper.registerKeyBinding(
         KeyBinding(
-            "key.rmscmod.open_menu",
+            "key.rmscmod.openMenu",
             InputUtil.Type.KEYSYM,
             GLFW.GLFW_KEY_PERIOD,
             "category.rmscmod"

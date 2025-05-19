@@ -69,9 +69,17 @@ object SelectionManager {
 
     fun hasSwitchSelection(): Boolean = switchPosSet.isNotEmpty()
 
-    fun clear() {
+    fun clearAreaSelection() {
         point1 = null
         point2 = null
+    }
+
+    fun clearSwitchSelection() {
         switchPosSet = mutableSetOf()
+    }
+
+    fun clearAll() {
+        clearAreaSelection()
+        clearSwitchSelection()
     }
 }
