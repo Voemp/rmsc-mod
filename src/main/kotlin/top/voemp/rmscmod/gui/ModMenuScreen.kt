@@ -85,17 +85,17 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
     }
 
     private fun initFooter() {
-        val directionalLayoutWidget: DirectionalLayoutWidget =
+        val footerWidget: DirectionalLayoutWidget =
             this.layout.addFooter(DirectionalLayoutWidget.horizontal().spacing(8))
-        directionalLayoutWidget.add(
+        footerWidget.add(
             ButtonWidget.builder(
-                Text.translatable("selectWorld.create")
+                Text.translatable("menu.rmscmod.tab.save.saveConfig")
             ) { button -> {} }.build()
         )
-        directionalLayoutWidget.add(
+        footerWidget.add(
             ButtonWidget.builder(
-                ScreenTexts.CANCEL
-            ) { button -> {} }.build()
+                ScreenTexts.DONE
+            ) { MinecraftClient.getInstance().setScreen(null) }.build()
         )
     }
 
@@ -174,6 +174,7 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
         private val p2FieldContainer: DirectionalLayoutWidget
         private val pointFieldContainer: DirectionalLayoutWidget
         private val switchPosListContainer: DirectionalLayoutWidget
+        private val clearButtons: DirectionalLayoutWidget
 
         private var p1: BlockPos? = SelectionManager.point1
         private var p2: BlockPos? = SelectionManager.point2
@@ -181,7 +182,7 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
 
         init {
             val adder = this.grid.setColumnSpacing(32).createAdder(2)
-            val leftColumn = DirectionalLayoutWidget.vertical().spacing(16)
+            val leftColumn = DirectionalLayoutWidget.vertical().spacing(8)
             val rightColumn = DirectionalLayoutWidget.vertical().spacing(16)
             adder.add(leftColumn, 1)
             adder.add(rightColumn, 1)
@@ -296,29 +297,84 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
                 )
             )
             leftColumn.add(pointFieldContainer)
-
             leftColumn.add(
+                TextWidget(
+                    Text.translatable(
+                        "menu.rmscmod.tab.save.world",
+                        SelectionManager.areaSelectionWorld?.value?.toString() ?: "None"
+                    ), textRenderer
+                )
+            )
+
+            clearButtons = DirectionalLayoutWidget.horizontal().spacing(8)
+            clearButtons.add(
                 ButtonWidget.builder(
                     Text.translatable("menu.rmscmod.tab.save.clearAreaSelection")
                 ) {
                     SelectionManager.clearAreaSelection()
                     clearAreaPointFields()
-                }.width(140).build()
+                }.width(66).build()
             )
+            clearButtons.add(
+                ButtonWidget.builder(
+                    Text.translatable("menu.rmscmod.tab.save.clearSwitchSelection")
+                ) {
+                    SelectionManager.clearSwitchSelection()
+                    removeSwitchPosFields()
+                }.width(66).build()
+            )
+            leftColumn.add(clearButtons)
 
             switchPosListContainer = DirectionalLayoutWidget.vertical().spacing(8)
             switchSet.forEachIndexed { index, pos ->
                 val xField = TextFieldWidget(textRenderer, 45, 20, Text.literal("X"))
                 xField.text = pos.x.toString()
+                xField.setChangedListener { xText ->
+                    val x = xText.toIntOrNull() ?: return@setChangedListener
+                    SelectionManager.switchPosSet = switchSet.toMutableSet().apply {
+                        remove(pos)
+                        add(BlockPos(x, pos.y, pos.z))
+                    }
+                }
                 val yField = TextFieldWidget(textRenderer, 45, 20, Text.literal("Y"))
                 yField.text = pos.y.toString()
+                yField.setChangedListener { yText ->
+                    val y = yText.toIntOrNull() ?: return@setChangedListener
+                    SelectionManager.switchPosSet = switchSet.toMutableSet().apply {
+                        remove(pos)
+                        add(BlockPos(pos.x, y, pos.z))
+                    }
+                }
                 val zField = TextFieldWidget(textRenderer, 45, 20, Text.literal("Z"))
                 zField.text = pos.z.toString()
+                zField.setChangedListener { zText ->
+                    val z = zText.toIntOrNull() ?: return@setChangedListener
+                    SelectionManager.switchPosSet = switchSet.toMutableSet().apply {
+                        remove(pos)
+                        add(BlockPos(pos.x, pos.y, z))
+                    }
+                }
+                val removeButton = ButtonWidget.builder(
+                    Text.translatable("menu.rmscmod.tab.save.removeSwitch")
+                ) {
+                    SelectionManager.switchPosSet = switchSet.toMutableSet().apply { remove(pos) }
+                    switchSet = SelectionManager.switchPosSet
+                    switchPosListContainer.forEachElement { container ->
+                        container.forEachChild { widget ->
+                            if (widget.isSelected) {
+                                container.forEachChild {
+                                    remove(it)
+                                }
+                            }
+                        }
+                    }
+                }.width(40).build()
 
                 val switchPosFieldContainer = DirectionalLayoutWidget.horizontal().spacing(2)
                 switchPosFieldContainer.add(xField)
                 switchPosFieldContainer.add(yField)
                 switchPosFieldContainer.add(zField)
+                switchPosFieldContainer.add(removeButton)
 
                 switchPosListContainer.add(
                     LayoutWidgets.createLabeledWidget(
@@ -328,15 +384,13 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
                     )
                 )
             }
-            rightColumn.add(switchPosListContainer)
-            rightColumn.add(
-                ButtonWidget.builder(
-                    Text.translatable("menu.rmscmod.tab.save.clearSwitchSelection")
-                ) {
-                    SelectionManager.clearSwitchSelection()
-                    clearSwitchPosFields()
-                }.width(140).build()
-            )
+            if (switchSet.isEmpty()) {
+                rightColumn.add(
+                    TextWidget(140, 160, Text.translatable("menu.rmscmod.tab.save.noSwitch"), textRenderer)
+                )
+            } else {
+                rightColumn.add(switchPosListContainer)
+            }
 
             /*
             val cyclingButtonWidget = adder.add<CyclingButtonWidget<WorldCreator.Mode?>?>(
@@ -425,13 +479,9 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
             p2ZField.text = ""
         }
 
-        private fun clearSwitchPosFields() {
+        private fun removeSwitchPosFields() {
             switchPosListContainer.forEachChild {
-                it.forEachChild { widget ->
-                    if (widget is TextFieldWidget) {
-                        widget.text = ""
-                    }
-                }
+                remove(it)
             }
         }
     }

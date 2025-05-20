@@ -4,6 +4,7 @@ import net.minecraft.client.gui.screen.Screen
 import net.minecraft.entity.player.PlayerEntity
 import net.minecraft.item.ItemStack
 import net.minecraft.item.Items
+import net.minecraft.registry.RegistryKey
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import net.minecraft.world.World
@@ -14,6 +15,7 @@ object SelectionManager {
         private set
     var point1: BlockPos? = null
     var point2: BlockPos? = null
+    var areaSelectionWorld: RegistryKey<World>? = null
     var switchPosSet: Set<BlockPos> = mutableSetOf()
 
     var lastLeftClickTime = 0L
@@ -22,15 +24,21 @@ object SelectionManager {
         isActive = stack?.item == Items.AMETHYST_SHARD
     }
 
-    fun handleLeftClick(player: PlayerEntity, pos: BlockPos) {
+    fun handleLeftClick(player: PlayerEntity, world: World, pos: BlockPos) {
         if (!isActive || (System.currentTimeMillis() - lastLeftClickTime) <= 150L) return
         lastLeftClickTime = System.currentTimeMillis()
 
         if (point1 != pos) {
+            if (areaSelectionWorld != null && areaSelectionWorld != world.registryKey) {
+                player.sendMessage(Text.literal("§c两个选区点必须在同一维度！"), true)
+                return
+            }
             point1 = pos
+            areaSelectionWorld = world.registryKey
             player.sendMessage(Text.literal("已选择点：§c${pos.x}, ${pos.y}, ${pos.z}"), true)
         } else {
             point1 = null
+            if (point2 == null) areaSelectionWorld = null
             player.sendMessage(Text.literal("已取消选择点：§c${pos.x}, ${pos.y}, ${pos.z}"), true)
         }
     }
@@ -40,25 +48,35 @@ object SelectionManager {
 
         when {
             Screen.hasControlDown() -> {
-                if (world.getBlockState(pos).isIn(ModBlockTags.SWITCH_SELECTION)) {
-                    if (!switchPosSet.contains(pos)) {
-                        switchPosSet += pos
-                        player.sendMessage(Text.literal("已选择开关：§e${pos.x}, ${pos.y}, ${pos.z}"), true)
-                    } else {
-                        switchPosSet -= pos
-                        player.sendMessage(Text.literal("已取消选择开关：§e${pos.x}, ${pos.y}, ${pos.z}"), true)
+                if (!world.getBlockState(pos).isIn(ModBlockTags.SWITCH_SELECTION)) {
+                    player.sendMessage(Text.literal("§c该方块不能作为开关"), true)
+                    return
+                }
+                if (!switchPosSet.contains(pos)) {
+                    if (switchPosSet.size >= 4) {
+                        player.sendMessage(Text.literal("§c开关数量超过上限"), true)
+                        return
                     }
+                    switchPosSet += pos
+                    player.sendMessage(Text.literal("已选择开关：§e${pos.x}, ${pos.y}, ${pos.z}"), true)
                 } else {
-                    player.sendMessage(Text.literal("§c该方块不能作为开关。"), true)
+                    switchPosSet -= pos
+                    player.sendMessage(Text.literal("已取消选择开关：§e${pos.x}, ${pos.y}, ${pos.z}"), true)
                 }
             }
 
             else -> {
                 if (point2 != pos) {
+                    if (areaSelectionWorld != null && areaSelectionWorld != world.registryKey) {
+                        player.sendMessage(Text.literal("§c两个选区点必须在同一维度！"), true)
+                        return
+                    }
                     point2 = pos
+                    areaSelectionWorld = world.registryKey
                     player.sendMessage(Text.literal("已选择点：§9${pos.x}, ${pos.y}, ${pos.z}"), true)
                 } else {
                     point2 = null
+                    if (point1 == null) areaSelectionWorld = null
                     player.sendMessage(Text.literal("已取消选择点：§9${pos.x}, ${pos.y}, ${pos.z}"), true)
                 }
             }
@@ -72,6 +90,7 @@ object SelectionManager {
     fun clearAreaSelection() {
         point1 = null
         point2 = null
+        areaSelectionWorld = null
     }
 
     fun clearSwitchSelection() {

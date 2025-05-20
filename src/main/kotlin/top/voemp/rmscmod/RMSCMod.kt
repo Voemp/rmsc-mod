@@ -36,7 +36,7 @@ object RMSCMod : ModInitializer {
 
         AttackBlockCallback.EVENT.register(AttackBlockCallback { player, world, hand, pos, _ ->
             if (world.isClient && hand == Hand.MAIN_HAND && SelectionManager.isActive) {
-                SelectionManager.handleLeftClick(player, pos)
+                SelectionManager.handleLeftClick(player, world, pos)
                 ActionResult.FAIL
             } else ActionResult.PASS
         })
