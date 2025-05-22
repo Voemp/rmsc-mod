@@ -19,7 +19,7 @@ class ModENUSLanguageProvider : FabricLanguageProvider {
         translationBuilder?.add("menu.rmscmod.title", "RMSC Menu")
         translationBuilder?.add("menu.rmscmod.tab.save.title", "Save Config")
         translationBuilder?.add("menu.rmscmod.tab.save.enterName", "Config Name")
-        translationBuilder?.add("menu.rmscmod.tab.save.world", "World: %s")
+        translationBuilder?.add("menu.rmscmod.tab.save.world", "World: [%s]")
         translationBuilder?.add("menu.rmscmod.tab.save.clearAreaSelection", "Clear Area")
         translationBuilder?.add("menu.rmscmod.tab.save.clearSwitchSelection", "Clear Switch")
         translationBuilder?.add("menu.rmscmod.tab.save.noSwitch", "No Switch Selected")

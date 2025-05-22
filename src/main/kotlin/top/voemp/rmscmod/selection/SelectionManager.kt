@@ -16,12 +16,20 @@ object SelectionManager {
     var point1: BlockPos? = null
     var point2: BlockPos? = null
     var areaSelectionWorld: RegistryKey<World>? = null
-    var switchPosSet: Set<BlockPos> = mutableSetOf()
+    var switchMap: MutableMap<RegistryKey<World>, MutableSet<BlockPos>> = mutableMapOf()
 
     var lastLeftClickTime = 0L
 
     fun updateState(stack: ItemStack?) {
         isActive = stack?.item == Items.AMETHYST_SHARD
+    }
+
+    fun addSwitchPos(worldRegistryKey: RegistryKey<World>, pos: BlockPos) {
+        switchMap.getOrPut(worldRegistryKey) { mutableSetOf() }.add(pos)
+    }
+
+    fun removeSwitchPos(worldRegistryKey: RegistryKey<World>, pos: BlockPos) {
+        switchMap.getOrPut(worldRegistryKey) { mutableSetOf() }.remove(pos)
     }
 
     fun handleLeftClick(player: PlayerEntity, world: World, pos: BlockPos) {
@@ -52,15 +60,15 @@ object SelectionManager {
                     player.sendMessage(Text.literal("§c该方块不能作为开关"), true)
                     return
                 }
-                if (!switchPosSet.contains(pos)) {
-                    if (switchPosSet.size >= 4) {
+                if (!switchMap.getOrElse(world.registryKey) { mutableSetOf() }.contains(pos)) {
+                    if (switchMap.values.sumOf { it.size } >= 4) {
                         player.sendMessage(Text.literal("§c开关数量超过上限"), true)
                         return
                     }
-                    switchPosSet += pos
+                    addSwitchPos(world.registryKey, pos)
                     player.sendMessage(Text.literal("已选择开关：§e${pos.x}, ${pos.y}, ${pos.z}"), true)
                 } else {
-                    switchPosSet -= pos
+                    removeSwitchPos(world.registryKey, pos)
                     player.sendMessage(Text.literal("已取消选择开关：§e${pos.x}, ${pos.y}, ${pos.z}"), true)
                 }
             }
@@ -85,7 +93,7 @@ object SelectionManager {
 
     fun hasAreaSelection(): Boolean = point1 != null && point2 != null
 
-    fun hasSwitchSelection(): Boolean = switchPosSet.isNotEmpty()
+    fun hasSwitchSelection(): Boolean = switchMap.isNotEmpty()
 
     fun clearAreaSelection() {
         point1 = null
@@ -94,7 +102,7 @@ object SelectionManager {
     }
 
     fun clearSwitchSelection() {
-        switchPosSet = mutableSetOf()
+        switchMap = mutableMapOf()
     }
 
     fun clearAll() {

@@ -11,9 +11,11 @@ import net.minecraft.client.gui.screen.world.CreateWorldScreen
 import net.minecraft.client.gui.tab.GridScreenTab
 import net.minecraft.client.gui.tab.TabManager
 import net.minecraft.client.gui.widget.*
+import net.minecraft.registry.RegistryKey
 import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
 import top.voemp.rmscmod.config.ConfigCreator
 import top.voemp.rmscmod.option.ModKeyBinding
 import top.voemp.rmscmod.selection.SelectionManager
@@ -178,7 +180,8 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
 
         private var p1: BlockPos? = SelectionManager.point1
         private var p2: BlockPos? = SelectionManager.point2
-        private var switchSet: Set<BlockPos> = SelectionManager.switchPosSet
+        private var switchMap: MutableMap<RegistryKey<World>, MutableSet<BlockPos>> = SelectionManager.switchMap
+        private var switchIndex: Int = 0
 
         init {
             val adder = this.grid.setColumnSpacing(32).createAdder(2)
@@ -301,7 +304,7 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
                 TextWidget(
                     Text.translatable(
                         "menu.rmscmod.tab.save.world",
-                        SelectionManager.areaSelectionWorld?.value?.toString() ?: "None"
+                        SelectionManager.areaSelectionWorld?.value ?: "None"
                     ), textRenderer
                 )
             )
@@ -326,65 +329,62 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
             leftColumn.add(clearButtons)
 
             switchPosListContainer = DirectionalLayoutWidget.vertical().spacing(8)
-            switchSet.forEachIndexed { index, pos ->
-                val xField = TextFieldWidget(textRenderer, 45, 20, Text.literal("X"))
-                xField.text = pos.x.toString()
-                xField.setChangedListener { xText ->
-                    val x = xText.toIntOrNull() ?: return@setChangedListener
-                    SelectionManager.switchPosSet = switchSet.toMutableSet().apply {
-                        remove(pos)
-                        add(BlockPos(x, pos.y, pos.z))
+            switchMap.forEach { worldRegistryKey, posSet ->
+                posSet.forEach { pos ->
+                    switchIndex++
+                    val xField = TextFieldWidget(textRenderer, 45, 20, Text.literal("X"))
+                    xField.text = pos.x.toString()
+                    xField.setChangedListener { xText ->
+                        val x = xText.toIntOrNull() ?: return@setChangedListener
+                        SelectionManager.removeSwitchPos(worldRegistryKey, pos)
+                        SelectionManager.addSwitchPos(worldRegistryKey, BlockPos(x, pos.y, pos.z))
                     }
-                }
-                val yField = TextFieldWidget(textRenderer, 45, 20, Text.literal("Y"))
-                yField.text = pos.y.toString()
-                yField.setChangedListener { yText ->
-                    val y = yText.toIntOrNull() ?: return@setChangedListener
-                    SelectionManager.switchPosSet = switchSet.toMutableSet().apply {
-                        remove(pos)
-                        add(BlockPos(pos.x, y, pos.z))
+                    val yField = TextFieldWidget(textRenderer, 45, 20, Text.literal("Y"))
+                    yField.text = pos.y.toString()
+                    yField.setChangedListener { yText ->
+                        val y = yText.toIntOrNull() ?: return@setChangedListener
+                        SelectionManager.removeSwitchPos(worldRegistryKey, pos)
+                        SelectionManager.addSwitchPos(worldRegistryKey, BlockPos(pos.x, y, pos.z))
                     }
-                }
-                val zField = TextFieldWidget(textRenderer, 45, 20, Text.literal("Z"))
-                zField.text = pos.z.toString()
-                zField.setChangedListener { zText ->
-                    val z = zText.toIntOrNull() ?: return@setChangedListener
-                    SelectionManager.switchPosSet = switchSet.toMutableSet().apply {
-                        remove(pos)
-                        add(BlockPos(pos.x, pos.y, z))
+                    val zField = TextFieldWidget(textRenderer, 45, 20, Text.literal("Z"))
+                    zField.text = pos.z.toString()
+                    zField.setChangedListener { zText ->
+                        val z = zText.toIntOrNull() ?: return@setChangedListener
+                        SelectionManager.removeSwitchPos(worldRegistryKey, pos)
+                        SelectionManager.addSwitchPos(worldRegistryKey, BlockPos(pos.x, pos.y, z))
                     }
-                }
-                val removeButton = ButtonWidget.builder(
-                    Text.translatable("menu.rmscmod.tab.save.removeSwitch")
-                ) {
-                    SelectionManager.switchPosSet = switchSet.toMutableSet().apply { remove(pos) }
-                    switchSet = SelectionManager.switchPosSet
-                    switchPosListContainer.forEachElement { container ->
-                        container.forEachChild { widget ->
-                            if (widget.isSelected) {
-                                container.forEachChild {
-                                    remove(it)
+                    val removeButton = ButtonWidget.builder(
+                        Text.translatable("menu.rmscmod.tab.save.removeSwitch")
+                    ) {
+                        SelectionManager.removeSwitchPos(worldRegistryKey, pos)
+                        switchMap = SelectionManager.switchMap
+                        switchPosListContainer.forEachElement { container ->
+                            container.forEachChild { widget ->
+                                if (widget.isSelected) {
+                                    container.forEachChild { e ->
+                                        remove(e)
+                                    }
                                 }
                             }
                         }
-                    }
-                }.width(40).build()
+                    }.width(40).build()
 
-                val switchPosFieldContainer = DirectionalLayoutWidget.horizontal().spacing(2)
-                switchPosFieldContainer.add(xField)
-                switchPosFieldContainer.add(yField)
-                switchPosFieldContainer.add(zField)
-                switchPosFieldContainer.add(removeButton)
+                    val switchPosFieldContainer = DirectionalLayoutWidget.horizontal().spacing(2)
+                    switchPosFieldContainer.add(xField)
+                    switchPosFieldContainer.add(yField)
+                    switchPosFieldContainer.add(zField)
+                    switchPosFieldContainer.add(removeButton)
 
-                switchPosListContainer.add(
-                    LayoutWidgets.createLabeledWidget(
-                        textRenderer,
-                        switchPosFieldContainer,
-                        Text.literal("Switch ${index + 1}:")
+                    switchPosListContainer.add(
+                        LayoutWidgets.createLabeledWidget(
+                            textRenderer,
+                            switchPosFieldContainer,
+                            Text.literal("Switch ${switchIndex}: [${worldRegistryKey.value}]")
+                        )
                     )
-                )
+                }
             }
-            if (switchSet.isEmpty()) {
+            if (switchMap.isEmpty()) {
                 rightColumn.add(
                     TextWidget(140, 160, Text.translatable("menu.rmscmod.tab.save.noSwitch"), textRenderer)
                 )
