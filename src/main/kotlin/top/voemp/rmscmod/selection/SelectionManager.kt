@@ -16,7 +16,7 @@ object SelectionManager {
     var point1: BlockPos? = null
     var point2: BlockPos? = null
     var areaSelectionWorld: RegistryKey<World>? = null
-    var switchMap: MutableMap<RegistryKey<World>, MutableSet<BlockPos>> = mutableMapOf()
+    var switchSet: MutableSet<BlockPosWithWorld> = mutableSetOf()
 
     var lastLeftClickTime = 0L
 
@@ -24,12 +24,12 @@ object SelectionManager {
         isActive = stack?.item == Items.AMETHYST_SHARD
     }
 
-    fun addSwitchPos(worldRegistryKey: RegistryKey<World>, pos: BlockPos) {
-        switchMap.getOrPut(worldRegistryKey) { mutableSetOf() }.add(pos)
+    fun addSwitch(switchPos: BlockPosWithWorld) {
+        switchSet += switchPos
     }
 
-    fun removeSwitchPos(worldRegistryKey: RegistryKey<World>, pos: BlockPos) {
-        switchMap.getOrPut(worldRegistryKey) { mutableSetOf() }.remove(pos)
+    fun removeSwitch(switchPos: BlockPosWithWorld) {
+        switchSet -= switchPos
     }
 
     fun handleLeftClick(player: PlayerEntity, world: World, pos: BlockPos) {
@@ -60,15 +60,16 @@ object SelectionManager {
                     player.sendMessage(Text.literal("§c该方块不能作为开关"), true)
                     return
                 }
-                if (!switchMap.getOrElse(world.registryKey) { mutableSetOf() }.contains(pos)) {
-                    if (switchMap.values.sumOf { it.size } >= 4) {
+                val switchPos = BlockPosWithWorld(world.registryKey.value, pos)
+                if (!switchSet.contains(switchPos)) {
+                    if (switchSet.size >= 4) {
                         player.sendMessage(Text.literal("§c开关数量超过上限"), true)
                         return
                     }
-                    addSwitchPos(world.registryKey, pos)
+                    addSwitch(switchPos)
                     player.sendMessage(Text.literal("已选择开关：§e${pos.x}, ${pos.y}, ${pos.z}"), true)
                 } else {
-                    removeSwitchPos(world.registryKey, pos)
+                    removeSwitch(switchPos)
                     player.sendMessage(Text.literal("已取消选择开关：§e${pos.x}, ${pos.y}, ${pos.z}"), true)
                 }
             }
@@ -93,7 +94,7 @@ object SelectionManager {
 
     fun hasAreaSelection(): Boolean = point1 != null && point2 != null
 
-    fun hasSwitchSelection(): Boolean = switchMap.isNotEmpty()
+    fun hasSwitchSelection(): Boolean = switchSet.isNotEmpty()
 
     fun clearAreaSelection() {
         point1 = null
@@ -102,7 +103,7 @@ object SelectionManager {
     }
 
     fun clearSwitchSelection() {
-        switchMap = mutableMapOf()
+        switchSet = mutableSetOf()
     }
 
     fun clearAll() {

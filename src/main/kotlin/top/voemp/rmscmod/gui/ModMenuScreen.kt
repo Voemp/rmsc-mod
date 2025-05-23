@@ -11,13 +11,12 @@ import net.minecraft.client.gui.screen.world.CreateWorldScreen
 import net.minecraft.client.gui.tab.GridScreenTab
 import net.minecraft.client.gui.tab.TabManager
 import net.minecraft.client.gui.widget.*
-import net.minecraft.registry.RegistryKey
 import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
 import top.voemp.rmscmod.config.ConfigCreator
 import top.voemp.rmscmod.option.ModKeyBinding
+import top.voemp.rmscmod.selection.BlockPosWithWorld
 import top.voemp.rmscmod.selection.SelectionManager
 import top.voemp.rmscmod.util.GuiUtils.createHorizontalLabeledWidget
 
@@ -180,8 +179,7 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
 
         private var p1: BlockPos? = SelectionManager.point1
         private var p2: BlockPos? = SelectionManager.point2
-        private var switchMap: MutableMap<RegistryKey<World>, MutableSet<BlockPos>> = SelectionManager.switchMap
-        private var switchIndex: Int = 0
+        private var switchSet: MutableSet<BlockPosWithWorld> = SelectionManager.switchSet
 
         init {
             val adder = this.grid.setColumnSpacing(32).createAdder(2)
@@ -329,145 +327,65 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
             leftColumn.add(clearButtons)
 
             switchPosListContainer = DirectionalLayoutWidget.vertical().spacing(8)
-            switchMap.forEach { worldRegistryKey, posSet ->
-                posSet.forEach { pos ->
-                    switchIndex++
-                    val xField = TextFieldWidget(textRenderer, 45, 20, Text.literal("X"))
-                    xField.text = pos.x.toString()
-                    xField.setChangedListener { xText ->
-                        val x = xText.toIntOrNull() ?: return@setChangedListener
-                        SelectionManager.removeSwitchPos(worldRegistryKey, pos)
-                        SelectionManager.addSwitchPos(worldRegistryKey, BlockPos(x, pos.y, pos.z))
-                    }
-                    val yField = TextFieldWidget(textRenderer, 45, 20, Text.literal("Y"))
-                    yField.text = pos.y.toString()
-                    yField.setChangedListener { yText ->
-                        val y = yText.toIntOrNull() ?: return@setChangedListener
-                        SelectionManager.removeSwitchPos(worldRegistryKey, pos)
-                        SelectionManager.addSwitchPos(worldRegistryKey, BlockPos(pos.x, y, pos.z))
-                    }
-                    val zField = TextFieldWidget(textRenderer, 45, 20, Text.literal("Z"))
-                    zField.text = pos.z.toString()
-                    zField.setChangedListener { zText ->
-                        val z = zText.toIntOrNull() ?: return@setChangedListener
-                        SelectionManager.removeSwitchPos(worldRegistryKey, pos)
-                        SelectionManager.addSwitchPos(worldRegistryKey, BlockPos(pos.x, pos.y, z))
-                    }
-                    val removeButton = ButtonWidget.builder(
-                        Text.translatable("menu.rmscmod.tab.save.removeSwitch")
-                    ) {
-                        SelectionManager.removeSwitchPos(worldRegistryKey, pos)
-                        switchMap = SelectionManager.switchMap
-                        switchPosListContainer.forEachElement { container ->
-                            container.forEachChild { widget ->
-                                if (widget.isSelected) {
-                                    container.forEachChild { e ->
-                                        remove(e)
-                                    }
+            switchSet.forEachIndexed { index, switch ->
+                val xField = TextFieldWidget(textRenderer, 45, 20, Text.literal("X"))
+                xField.text = switch.pos.x.toString()
+                xField.setChangedListener { xText ->
+                    val x = xText.toIntOrNull() ?: return@setChangedListener
+                    SelectionManager.removeSwitch(switch)
+                    SelectionManager.addSwitch(switch.setX(x))
+                }
+                val yField = TextFieldWidget(textRenderer, 45, 20, Text.literal("Y"))
+                yField.text = switch.pos.y.toString()
+                yField.setChangedListener { yText ->
+                    val y = yText.toIntOrNull() ?: return@setChangedListener
+                    SelectionManager.removeSwitch(switch)
+                    SelectionManager.addSwitch(switch.setY(y))
+                }
+                val zField = TextFieldWidget(textRenderer, 45, 20, Text.literal("Z"))
+                zField.text = switch.pos.z.toString()
+                zField.setChangedListener { zText ->
+                    val z = zText.toIntOrNull() ?: return@setChangedListener
+                    SelectionManager.removeSwitch(switch)
+                    SelectionManager.addSwitch(switch.setZ(z))
+                }
+                val removeButton = ButtonWidget.builder(
+                    Text.translatable("menu.rmscmod.tab.save.removeSwitch")
+                ) {
+                    SelectionManager.removeSwitch(switch)
+                    switchSet = SelectionManager.switchSet
+                    switchPosListContainer.forEachElement { container ->
+                        container.forEachChild { widget ->
+                            if (widget.isSelected) {
+                                container.forEachChild { e ->
+                                    remove(e)
                                 }
                             }
                         }
-                    }.width(40).build()
+                    }
+                }.width(40).build()
 
-                    val switchPosFieldContainer = DirectionalLayoutWidget.horizontal().spacing(2)
-                    switchPosFieldContainer.add(xField)
-                    switchPosFieldContainer.add(yField)
-                    switchPosFieldContainer.add(zField)
-                    switchPosFieldContainer.add(removeButton)
+                val switchPosFieldContainer = DirectionalLayoutWidget.horizontal().spacing(2)
+                switchPosFieldContainer.add(xField)
+                switchPosFieldContainer.add(yField)
+                switchPosFieldContainer.add(zField)
+                switchPosFieldContainer.add(removeButton)
 
-                    switchPosListContainer.add(
-                        LayoutWidgets.createLabeledWidget(
-                            textRenderer,
-                            switchPosFieldContainer,
-                            Text.literal("Switch ${switchIndex}: [${worldRegistryKey.value}]")
-                        )
+                switchPosListContainer.add(
+                    LayoutWidgets.createLabeledWidget(
+                        textRenderer,
+                        switchPosFieldContainer,
+                        Text.literal("Switch ${index + 1}: [${switch.worldIdentifier}]")
                     )
-                }
+                )
             }
-            if (switchMap.isEmpty()) {
+            if (switchSet.isEmpty()) {
                 rightColumn.add(
                     TextWidget(140, 160, Text.translatable("menu.rmscmod.tab.save.noSwitch"), textRenderer)
                 )
             } else {
                 rightColumn.add(switchPosListContainer)
             }
-
-            /*
-            val cyclingButtonWidget = adder.add<CyclingButtonWidget<WorldCreator.Mode?>?>(
-                CyclingButtonWidget.builder<WorldCreator.Mode?>(Function { value: WorldCreator.Mode? -> value!!.name })
-                    .values(WorldCreator.Mode.SURVIVAL, WorldCreator.Mode.HARDCORE, WorldCreator.Mode.CREATIVE)
-                    .build(
-                        0,
-                        0,
-                        210,
-                        20,
-                        CreateWorldScreen.GAME_MODE_TEXT,
-                        UpdateCallback { button: CyclingButtonWidget<WorldCreator.Mode?>?, value: WorldCreator.Mode? ->
-                            this@CreateWorldScreen.worldCreator.setGameMode(value)
-                        }),
-                positioner
-            )
-            this@CreateWorldScreen.worldCreator.addListener(Consumer { creator: WorldCreator? ->
-                cyclingButtonWidget.setValue(creator!!.getGameMode())
-                cyclingButtonWidget.active = !creator.isDebug()
-                cyclingButtonWidget.setTooltip(Tooltip.of(creator.getGameMode().getInfo()))
-            })
-            val cyclingButtonWidget2 = adder.add<CyclingButtonWidget<Difficulty?>?>(
-                CyclingButtonWidget.builder<Difficulty?>(Function { obj: Difficulty? -> obj!!.getTranslatableName() })
-                    .values(*Difficulty.entries.toTypedArray())
-                    .build(
-                        0,
-                        0,
-                        210,
-                        20,
-                        Text.translatable("options.difficulty"),
-                        UpdateCallback { button: CyclingButtonWidget<Difficulty?>?, value: Difficulty? ->
-                            this@CreateWorldScreen.worldCreator.setDifficulty(value)
-                        }),
-                positioner
-            )
-            this@CreateWorldScreen.worldCreator.addListener(Consumer { creator: WorldCreator? ->
-                cyclingButtonWidget2.setValue(this@CreateWorldScreen.worldCreator.getDifficulty())
-                cyclingButtonWidget2.active = !this@CreateWorldScreen.worldCreator.isHardcore()
-                cyclingButtonWidget2.setTooltip(
-                    Tooltip.of(
-                        this@CreateWorldScreen.worldCreator.getDifficulty().getInfo()
-                    )
-                )
-            })
-            val cyclingButtonWidget3 = adder.add<CyclingButtonWidget<Boolean?>?>(
-                CyclingButtonWidget.onOffBuilder()
-                    .tooltip(TooltipFactory { value: Boolean? -> Tooltip.of(CreateWorldScreen.ALLOW_COMMANDS_INFO_TEXT) })
-                    .build(
-                        0,
-                        0,
-                        210,
-                        20,
-                        ALLOW_COMMANDS_TEXT,
-                        UpdateCallback { button: CyclingButtonWidget<Boolean?>?, value: Boolean? ->
-                            this@CreateWorldScreen.worldCreator.setCheatsEnabled(value)
-                        })
-            )
-            this@CreateWorldScreen.worldCreator.addListener(Consumer { creator: WorldCreator? ->
-                cyclingButtonWidget3.setValue(this@CreateWorldScreen.worldCreator.areCheatsEnabled())
-                cyclingButtonWidget3.active =
-                    !this@CreateWorldScreen.worldCreator.isDebug() && !this@CreateWorldScreen.worldCreator.isHardcore()
-            })
-            if (!SharedConstants.getGameVersion().isStable()) {
-                adder.add<ButtonWidget?>(
-                    ButtonWidget.builder(
-                        CreateWorldScreen.EXPERIMENTS_TEXT,
-                        PressAction { button: ButtonWidget? ->
-                            this@CreateWorldScreen.openExperimentsScreen(
-                                this@CreateWorldScreen.worldCreator.getGeneratorOptionsHolder().dataConfiguration()
-                            )
-                        }
-                    )
-                        .width(210)
-                        .build()
-                )
-            }
-            */
         }
 
         private fun clearAreaPointFields() {

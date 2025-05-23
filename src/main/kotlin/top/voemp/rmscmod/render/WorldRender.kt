@@ -17,7 +17,7 @@ object WorldRender {
 
         val p1 = SelectionManager.point1
         val p2 = SelectionManager.point2
-        val spSet = SelectionManager.switchMap
+        val spSet = SelectionManager.switchSet
 
         if (p1 != null && p2 != null) {
             drawRegionBoxOutline(p1, p2, 1f, 1f, 1f, matrices, camera, provider)
@@ -29,10 +29,8 @@ object WorldRender {
             drawBlockOutline(it, 0f, 0.4f, 1f, matrices, camera, provider)
         }
 
-        spSet.forEach {
-            it.value.forEach { pos ->
-                drawBlockOutline(pos, 1f, 1f, 0f, matrices, camera, provider)
-            }
+        spSet.forEach { switch ->
+            drawBlockOutline(switch.pos, 1f, 1f, 0f, matrices, camera, provider)
         }
     }
 

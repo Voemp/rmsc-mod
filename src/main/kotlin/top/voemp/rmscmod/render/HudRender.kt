@@ -20,8 +20,7 @@ object HudRender {
 
         val p1 = SelectionManager.point1
         val p2 = SelectionManager.point2
-        val spMap = SelectionManager.switchMap
-        var switchIndex = 0
+        val switchSet = SelectionManager.switchSet
 
         if (!Screen.hasControlDown()) {
             lines.add("§f[§d框选模式§f] §a角点")
@@ -39,13 +38,10 @@ object HudRender {
             }
         } else {
             lines.add("§f[§d框选模式§f] §a开关")
-            if (spMap.isNotEmpty()) {
-                lines.add("§f已选开关: §a${spMap.values.sumOf { it.size }}")
-                spMap.forEach {
-                    it.value.forEach { pos ->
-                        switchIndex++
-                        lines.add("§f开关${switchIndex}: §a${pos.x}, ${pos.y}, ${pos.z}")
-                    }
+            if (switchSet.isNotEmpty()) {
+                lines.add("§f已选开关: §a${switchSet.size}")
+                switchSet.forEachIndexed { index, switch ->
+                    lines.add("§f开关${index + 1}: §a${switch.pos.x}, ${switch.pos.y}, ${switch.pos.z}")
                 }
             }
         }
