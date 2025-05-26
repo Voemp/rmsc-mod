@@ -4,16 +4,11 @@ import net.minecraft.util.Identifier
 import net.minecraft.util.math.BlockPos
 
 data class BlockPosWithWorld(
-    var worldIdentifier: Identifier,
+    var world: Identifier,
     var pos: BlockPos
 ) {
-    fun setWorldIdentifier(newWorldIdentifier: Identifier): BlockPosWithWorld {
-        this.worldIdentifier = newWorldIdentifier
-        return this
-    }
-
-    fun setPos(newPos: BlockPos): BlockPosWithWorld {
-        this.pos = newPos
+    fun setWorld(newWorldIdentifier: Identifier): BlockPosWithWorld {
+        this.world = newWorldIdentifier
         return this
     }
 

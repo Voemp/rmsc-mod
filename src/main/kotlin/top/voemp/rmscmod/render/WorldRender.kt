@@ -2,6 +2,7 @@ package top.voemp.rmscmod.render
 
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderContext
 import net.fabricmc.fabric.api.client.rendering.v1.WorldRenderEvents
+import net.minecraft.client.MinecraftClient
 import net.minecraft.client.util.math.MatrixStack
 import top.voemp.rmscmod.selection.SelectionManager
 import top.voemp.rmscmod.util.RenderUtils.drawBlockOutline
@@ -15,21 +16,26 @@ object WorldRender {
         val camera = context.camera()
         val provider = context.consumers() ?: return
 
-        val p1 = SelectionManager.point1
-        val p2 = SelectionManager.point2
+        val p1 = SelectionManager.areaSelection.pos1
+        val p2 = SelectionManager.areaSelection.pos2
+        val areaWorld  = SelectionManager.areaSelection.world
         val spSet = SelectionManager.switchSet
+        val curWorld  = MinecraftClient.getInstance().world?.registryKey?.value
 
-        if (p1 != null && p2 != null) {
-            drawRegionBoxOutline(p1, p2, 1f, 1f, 1f, matrices, camera, provider)
-        }
-        p1?.let {
-            drawBlockOutline(it, 1f, 0f, 0f, matrices, camera, provider)
-        }
-        p2?.let {
-            drawBlockOutline(it, 0f, 0.4f, 1f, matrices, camera, provider)
+        if (areaWorld == curWorld) {
+            if (p1 != null && p2 != null) {
+                drawRegionBoxOutline(p1, p2, 1f, 1f, 1f, matrices, camera, provider)
+            }
+            p1?.let {
+                drawBlockOutline(it, 1f, 0f, 0f, matrices, camera, provider)
+            }
+            p2?.let {
+                drawBlockOutline(it, 0f, 0.4f, 1f, matrices, camera, provider)
+            }
         }
 
         spSet.forEach { switch ->
+            if (switch.world != curWorld) return@forEach
             drawBlockOutline(switch.pos, 1f, 1f, 0f, matrices, camera, provider)
         }
     }

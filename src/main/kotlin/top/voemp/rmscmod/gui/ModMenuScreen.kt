@@ -15,6 +15,7 @@ import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import top.voemp.rmscmod.config.ConfigCreator
+import top.voemp.rmscmod.config.ConfigManager
 import top.voemp.rmscmod.option.ModKeyBinding
 import top.voemp.rmscmod.selection.BlockPosWithWorld
 import top.voemp.rmscmod.selection.SelectionManager
@@ -91,7 +92,7 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
         footerWidget.add(
             ButtonWidget.builder(
                 Text.translatable("menu.rmscmod.tab.save.saveConfig")
-            ) { button -> {} }.build()
+            ) { ConfigManager.saveConfig(ConfigCreator.build()) }.build()
         )
         footerWidget.add(
             ButtonWidget.builder(
@@ -177,8 +178,8 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
         private val switchPosListContainer: DirectionalLayoutWidget
         private val clearButtons: DirectionalLayoutWidget
 
-        private var p1: BlockPos? = SelectionManager.point1
-        private var p2: BlockPos? = SelectionManager.point2
+        private var p1: BlockPos? = SelectionManager.areaSelection.pos1
+        private var p2: BlockPos? = SelectionManager.areaSelection.pos2
         private var switchSet: MutableSet<BlockPosWithWorld> = SelectionManager.switchSet
 
         init {
@@ -206,37 +207,37 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
             p1XField.text = p1?.x?.toString() ?: ""
             p1XField.setChangedListener { xText ->
                 val x = xText.toIntOrNull() ?: return@setChangedListener
-                SelectionManager.point1 = BlockPos(x, p1?.y ?: 0, p1?.z ?: 0)
+                SelectionManager.areaSelection.setPos1X(x)
             }
             p1YField = TextFieldWidget(textRenderer, 45, 20, Text.literal("P1 Y"))
             p1YField.text = p1?.y?.toString() ?: ""
             p1YField.setChangedListener { yText ->
                 val y = yText.toIntOrNull() ?: return@setChangedListener
-                SelectionManager.point1 = BlockPos(p1?.x ?: 0, y, p1?.z ?: 0)
+                SelectionManager.areaSelection.setPos1Y(y)
             }
             p1ZField = TextFieldWidget(textRenderer, 45, 20, Text.literal("P1 Z"))
             p1ZField.text = p1?.z?.toString() ?: ""
             p1ZField.setChangedListener { zText ->
                 val z = zText.toIntOrNull() ?: return@setChangedListener
-                SelectionManager.point1 = BlockPos(p1?.x ?: 0, p1?.y ?: 0, z)
+                SelectionManager.areaSelection.setPos1Z(z)
             }
             p2XField = TextFieldWidget(textRenderer, 45, 20, Text.literal("P2 X"))
             p2XField.text = p2?.x?.toString() ?: ""
             p2XField.setChangedListener { xText ->
                 val x = xText.toIntOrNull() ?: return@setChangedListener
-                SelectionManager.point2 = BlockPos(x, p2?.y ?: 0, p2?.z ?: 0)
+                SelectionManager.areaSelection.setPos2X(x)
             }
             p2YField = TextFieldWidget(textRenderer, 45, 20, Text.literal("P2 Y"))
             p2YField.text = p2?.y?.toString() ?: ""
             p2YField.setChangedListener { yText ->
                 val y = yText.toIntOrNull() ?: return@setChangedListener
-                SelectionManager.point2 = BlockPos(p2?.x ?: 0, y, p2?.z ?: 0)
+                SelectionManager.areaSelection.setPos2Y(y)
             }
             p2ZField = TextFieldWidget(textRenderer, 45, 20, Text.literal("P2 Z"))
             p2ZField.text = p2?.z?.toString() ?: ""
             p2ZField.setChangedListener { zText ->
                 val z = zText.toIntOrNull() ?: return@setChangedListener
-                SelectionManager.point2 = BlockPos(p2?.x ?: 0, p2?.y ?: 0, z)
+                SelectionManager.areaSelection.setPos2Z(z)
             }
             p1FieldContainer = DirectionalLayoutWidget.vertical().spacing(2)
             p1FieldContainer.add(
@@ -302,7 +303,7 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
                 TextWidget(
                     Text.translatable(
                         "menu.rmscmod.tab.save.world",
-                        SelectionManager.areaSelectionWorld?.value ?: "None"
+                        SelectionManager.areaSelection.world ?: "None"
                     ), textRenderer
                 )
             )
@@ -375,7 +376,7 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
                     LayoutWidgets.createLabeledWidget(
                         textRenderer,
                         switchPosFieldContainer,
-                        Text.literal("Switch ${index + 1}: [${switch.worldIdentifier}]")
+                        Text.literal("Switch ${index + 1}: [${switch.world}]")
                     )
                 )
             }

@@ -18,8 +18,8 @@ object HudRender {
         val textRenderer: TextRenderer = client.textRenderer
         val lines = mutableListOf<String>()
 
-        val p1 = SelectionManager.point1
-        val p2 = SelectionManager.point2
+        val p1 = SelectionManager.areaSelection.pos1
+        val p2 = SelectionManager.areaSelection.pos2
         val switchSet = SelectionManager.switchSet
 
         if (!Screen.hasControlDown()) {
