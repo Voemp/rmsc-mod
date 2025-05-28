@@ -6,10 +6,12 @@ import net.fabricmc.api.Environment
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.ScreenRect
+import net.minecraft.client.gui.screen.ConfirmScreen
 import net.minecraft.client.gui.screen.Screen
 import net.minecraft.client.gui.screen.world.CreateWorldScreen
 import net.minecraft.client.gui.tab.GridScreenTab
 import net.minecraft.client.gui.tab.TabManager
+import net.minecraft.client.gui.tooltip.Tooltip
 import net.minecraft.client.gui.widget.*
 import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
@@ -34,47 +36,11 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
         private val SAVE_TAB_TITLE_TEXT: Text = Text.translatable("menu.rmscmod.tab.save.title")
     }
 
-    override fun init() {/*
-        val client = MinecraftClient.getInstance()
-        val textRenderer = client.textRenderer
-
-        // 文本输入框
-        nameField = TextFieldWidget(
-            textRenderer,
-            this.width / 2 - 100,
-            this.height / 2 - 30,
-            200, 20,
-            Text.literal("输入名称")
-        )
-        nameField.setMaxLength(32)
-        nameField.text = ""
-
-        // 保存按钮
-        saveButton = ButtonWidget
-            .builder(Text.literal("保存")) {
-                val name = nameField.text
-                // 保存逻辑
-
-                client.setScreen(null)
-            }
-            .position(this.width / 2 - 100, this.height / 2)
-            .size(95, 20)
+    override fun init() {
+        this.tabNavigation = TabNavigationWidget
+            .builder(this.tabManager, this.width)
+            .tabs(SaveTab(), SaveTab())
             .build()
-
-        // 取消按钮
-        cancelButton = ButtonWidget
-            .builder(Text.literal("取消")) {
-                client.setScreen(null)
-            }
-            .position(this.width / 2 + 5, this.height / 2)
-            .size(95, 20)
-            .build()
-
-        addDrawableChild(nameField)
-        addDrawableChild(saveButton)
-        addDrawableChild(cancelButton)
-         */
-        this.tabNavigation = TabNavigationWidget.builder(this.tabManager, this.width).tabs(SaveTab(), SaveTab()).build()
         this.addDrawableChild(this.tabNavigation)
         this.initFooter()
 
@@ -89,11 +55,44 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
     private fun initFooter() {
         val footerWidget: DirectionalLayoutWidget =
             this.layout.addFooter(DirectionalLayoutWidget.horizontal().spacing(8))
-        footerWidget.add(
-            ButtonWidget.builder(
-                Text.translatable("menu.rmscmod.tab.save.saveConfig")
-            ) { ConfigManager.saveConfig(ConfigCreator.build()) }.build()
-        )
+        val saveButton = ButtonWidget.builder(
+            Text.translatable("menu.rmscmod.tab.save.saveConfig")
+        ) {
+            val config = ConfigCreator.build()
+            val confirmScreen: ConfirmScreen?
+            if (ConfigManager.isExistConfig(config.id)) {
+                confirmScreen = ConfirmScreen(
+                    { confirmed ->
+                        if (confirmed) {
+                            ConfigManager.deleteConfig(config.id)
+                            ConfigManager.saveConfig(config)
+                            SelectionManager.clearAll()
+                        }
+                        refreshScreen()
+                    },
+                    Text.translatable("menu.rmscmod.tab.save.confirmCover"),
+                    Text.translatable("menu.rmscmod.tab.save.confirmCover.message")
+                )
+            } else {
+                confirmScreen = ConfirmScreen(
+                    { confirmed ->
+                        if (confirmed) {
+                            ConfigManager.saveConfig(config)
+                            SelectionManager.clearAll()
+                        }
+                        refreshScreen()
+                    },
+                    Text.translatable("menu.rmscmod.tab.save.confirmSave"),
+                    Text.translatable("menu.rmscmod.tab.save.confirmSave.message")
+                )
+            }
+            this.client?.setScreen(confirmScreen)
+        }.build()
+        saveButton.active = SelectionManager.hasAreaSelection() || SelectionManager.hasSwitchSelection()
+        if (!saveButton.active) {
+            saveButton.tooltip = Tooltip.of(Text.literal("请先选择区域或开关"))
+        }
+        footerWidget.add(saveButton)
         footerWidget.add(
             ButtonWidget.builder(
                 ScreenTexts.DONE
@@ -158,9 +157,8 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
         this.renderDarkening(context, 0, this.layout.headerHeight, this.width, this.height)
     }
 
-
-    override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
-        return super.mouseClicked(mouseX, mouseY, button)
+    private fun refreshScreen() {
+        this.client?.setScreen(ModMenuScreen())
     }
 
     @Environment(EnvType.CLIENT)
@@ -314,7 +312,7 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
                     Text.translatable("menu.rmscmod.tab.save.clearAreaSelection")
                 ) {
                     SelectionManager.clearAreaSelection()
-                    clearAreaPointFields()
+                    refreshScreen()
                 }.width(66).build()
             )
             clearButtons.add(
@@ -322,7 +320,7 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
                     Text.translatable("menu.rmscmod.tab.save.clearSwitchSelection")
                 ) {
                     SelectionManager.clearSwitchSelection()
-                    removeSwitchPosFields()
+                    refreshScreen()
                 }.width(66).build()
             )
             leftColumn.add(clearButtons)
@@ -354,16 +352,7 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
                     Text.translatable("menu.rmscmod.tab.save.removeSwitch")
                 ) {
                     SelectionManager.removeSwitch(switch)
-                    switchSet = SelectionManager.switchSet
-                    switchPosListContainer.forEachElement { container ->
-                        container.forEachChild { widget ->
-                            if (widget.isSelected) {
-                                container.forEachChild { e ->
-                                    remove(e)
-                                }
-                            }
-                        }
-                    }
+                    refreshScreen()
                 }.width(40).build()
 
                 val switchPosFieldContainer = DirectionalLayoutWidget.horizontal().spacing(2)
@@ -386,21 +375,6 @@ class ModMenuScreen : Screen(Text.translatable("menu.rmscmod.title")) {
                 )
             } else {
                 rightColumn.add(switchPosListContainer)
-            }
-        }
-
-        private fun clearAreaPointFields() {
-            p1XField.text = ""
-            p1YField.text = ""
-            p1ZField.text = ""
-            p2XField.text = ""
-            p2YField.text = ""
-            p2ZField.text = ""
-        }
-
-        private fun removeSwitchPosFields() {
-            switchPosListContainer.forEachChild {
-                remove(it)
             }
         }
     }

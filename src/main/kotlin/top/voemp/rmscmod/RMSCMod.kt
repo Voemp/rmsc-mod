@@ -2,11 +2,13 @@ package top.voemp.rmscmod
 
 import net.fabricmc.api.ModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
 import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import org.slf4j.LoggerFactory
+import top.voemp.rmscmod.config.ConfigManager
 import top.voemp.rmscmod.gui.ModMenuScreen
 import top.voemp.rmscmod.option.ModKeyBinding
 import top.voemp.rmscmod.render.HudRender
@@ -46,6 +48,11 @@ object RMSCMod : ModInitializer {
                 SelectionManager.handleRightClick(player, world, hitResult.blockPos)
                 ActionResult.FAIL
             } else ActionResult.PASS
+        })
+
+        ServerWorldEvents.UNLOAD.register(ServerWorldEvents.Unload { server, world ->
+            SelectionManager.clearAll()
+            ConfigManager.curConfigId = null
         })
     }
 }

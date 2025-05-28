@@ -25,6 +25,13 @@ class ModENUSLanguageProvider : FabricLanguageProvider {
         translationBuilder?.add("menu.rmscmod.tab.save.noSwitch", "No Switch Selected")
         translationBuilder?.add("menu.rmscmod.tab.save.removeSwitch", "Remove")
         translationBuilder?.add("menu.rmscmod.tab.save.saveConfig", "Save Config")
+        translationBuilder?.add("menu.rmscmod.tab.save.confirmSave", "Save Config")
+        translationBuilder?.add("menu.rmscmod.tab.save.confirmSave.message", "Are you sure to save the config?")
+        translationBuilder?.add("menu.rmscmod.tab.save.confirmCover", "Cover Config")
+        translationBuilder?.add(
+            "menu.rmscmod.tab.save.confirmCover.message",
+            "The config with the same ID already exists. This will cover the current config. Are you sure?"
+        )
         translationBuilder?.add("config.rmscmod.newConfig", "New Config")
         translationBuilder?.add("key.rmscmod.openMenu", "Open RMSC Menu")
         translationBuilder?.add("category.rmscmod", "RMSC Mod")

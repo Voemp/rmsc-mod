@@ -89,7 +89,7 @@ object SelectionManager {
         }
     }
 
-    fun hasAreaSelection(): Boolean = areaSelection.world != null
+    fun hasAreaSelection(): Boolean = areaSelection.pos1 != null && areaSelection.pos2 != null
 
     fun hasSwitchSelection(): Boolean = switchSet.isNotEmpty()
 
