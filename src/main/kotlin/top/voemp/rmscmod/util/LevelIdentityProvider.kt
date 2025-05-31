@@ -2,8 +2,8 @@ package top.voemp.rmscmod.util
 
 import net.minecraft.client.MinecraftClient
 
-object WorldIdentityProvider {
-    fun getWorldIdentifier(): String {
+object LevelIdentityProvider {
+    fun getLevelIdentifier(): String {
         val client = MinecraftClient.getInstance()
 
         return if (client.isIntegratedServerRunning) {

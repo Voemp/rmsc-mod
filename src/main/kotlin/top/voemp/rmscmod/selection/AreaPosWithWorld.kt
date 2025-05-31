@@ -8,9 +8,16 @@ data class AreaPosWithWorld(
     var pos1: BlockPos?,
     var pos2: BlockPos?
 ) {
-    fun setWorld(newWorldIdentifier: Identifier): AreaPosWithWorld {
-        world = newWorldIdentifier
-        return this
+    fun setPos1(newX: Int?, newY: Int?, newZ: Int?) {
+        pos1 = pos1?.let {
+             BlockPos(newX ?: it.x, newY ?: it.y, newZ ?: it.z)
+        }
+    }
+
+    fun setPos2(newX: Int?, newY: Int?, newZ: Int?) {
+        pos2 = pos2?.let {
+            BlockPos(newX ?: it.x, newY ?: it.y, newZ ?: it.z)
+        }
     }
 
     fun setPos1X(newX: Int) {
