@@ -105,7 +105,7 @@ class EditConfigScreen(parent: Screen?) :
             rightColumn.add(switchSelectionList)
         } else {
             rightColumn.add(
-                TextWidget(140, 160, Text.translatable("menu.rmscmod.tab.save.noSwitch"), textRenderer)
+                TextWidget(140, 160, Text.translatable("menu.rmscmod.editConfigScreen.noSwitch"), textRenderer)
             )
         }
     }
