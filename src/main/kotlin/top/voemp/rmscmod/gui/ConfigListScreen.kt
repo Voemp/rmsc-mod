@@ -13,6 +13,7 @@ import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
 import top.voemp.rmscmod.config.ConfigManager
 import top.voemp.rmscmod.config.ModConfig
+import top.voemp.rmscmod.selection.SelectionManager
 
 @Environment(EnvType.CLIENT)
 class ConfigListScreen(parent: Screen?) :
@@ -60,7 +61,8 @@ class ConfigListScreen(parent: Screen?) :
     private fun onEdit() {
         val configEntry: ConfigListWidget.ConfigEntry? = configSelectionList?.selectedOrNull
         if (configEntry != null) {
-            ConfigManager.curConfigId = configEntry.id
+            val config = ConfigManager.loadConfig(configEntry.id)
+            config?.let { ConfigManager.resolveConfig(it) }
             client?.setScreen(EditConfigScreen(this))
         }
     }
@@ -84,7 +86,7 @@ class ConfigListScreen(parent: Screen?) :
         deleteButton?.active = config != null
     }
 
-    private fun refreshScreen() {
+    fun refreshScreen() {
         client?.setScreen(ConfigListScreen(parent))
     }
 
@@ -130,6 +132,14 @@ class ConfigListScreen(parent: Screen?) :
                     x + 5,
                     y + 5,
                     0xFFFFFF,
+                    false
+                )
+                context?.drawText(
+                    client.textRenderer,
+                    Text.of(config.time),
+                    x + entryWidth - 5 - client.textRenderer.getWidth(Text.of(config.time.toString())),
+                    y + 5,
+                    0x888888,
                     false
                 )
             }

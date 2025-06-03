@@ -3,14 +3,18 @@ package top.voemp.rmscmod.config
 import com.google.gson.Gson
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.text.Text
+import top.voemp.rmscmod.selection.BlockPosWithWorld
 import top.voemp.rmscmod.selection.SelectionManager
 import top.voemp.rmscmod.util.LevelIdentityProvider
 import java.nio.file.Files
 import java.nio.file.Path
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 object ConfigManager {
     private val NEW_CONFIG_NAME: Text = Text.translatable("config.rmscmod.newConfig")
     private var configName = NEW_CONFIG_NAME.string
+    val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
     var curConfigId: String? = null
 
     fun getConfigName(): String {
@@ -22,13 +26,14 @@ object ConfigManager {
     }
 
     private fun generateId(): String {
-        return configName.replace("[^a-zA-Z0-9_]".toRegex(), "_") + System.currentTimeMillis()
+        return configName.replace("[^a-zA-Z0-9_]".toRegex(), "_") + "_" + System.currentTimeMillis()
     }
 
     fun build(): ModConfig {
         return ModConfig(
             id = curConfigId ?: generateId(),
             name = configName,
+            time = LocalDateTime.now().format(formatter),
             switchStatus = false,
             areaSelection = SelectionManager.areaSelection,
             switchSet = if (SelectionManager.hasSwitchSelection()) SelectionManager.switchSet else null
@@ -49,6 +54,7 @@ object ConfigManager {
     fun saveConfig(config: ModConfig) {
         val configFile = configDir().resolve("${config.id}.json")
         Files.writeString(configFile, Gson().toJson(config))
+        setConfigName(NEW_CONFIG_NAME.string)
         curConfigId = null
     }
 
@@ -67,6 +73,18 @@ object ConfigManager {
             }
         }
         return configs
+    }
+
+    fun resolveConfig(config: ModConfig) {
+        curConfigId = config.id
+        setConfigName(config.name)
+        SelectionManager.clearAll()
+        if (config.areaSelection != null) {
+            SelectionManager.areaSelection = config.areaSelection
+        }
+        if (config.switchSet != null) {
+            SelectionManager.switchSet = config.switchSet
+        }
     }
 
     fun deleteConfig(id: String) {

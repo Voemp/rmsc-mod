@@ -13,7 +13,7 @@ object SelectionManager {
     var isActive: Boolean = false
         private set
     var areaSelection: AreaPosWithWorld = AreaPosWithWorld(null, null, null)
-    var switchSet: MutableSet<BlockPosWithWorld> = mutableSetOf()
+    var switchSet: Set<BlockPosWithWorld> = mutableSetOf()
 
     var lastLeftClickTime = 0L
 
