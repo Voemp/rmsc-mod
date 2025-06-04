@@ -1,10 +1,11 @@
 package top.voemp.rmscmod.selection
 
-import net.minecraft.util.Identifier
+import net.minecraft.registry.RegistryKey
 import net.minecraft.util.math.BlockPos
+import net.minecraft.world.World
 
 data class BlockPosWithWorld(
-    var world: Identifier,
+    var world: RegistryKey<World>,
     var pos: BlockPos
 ) {
     fun setPos(newX: Int?, newY: Int?, newZ: Int?) {

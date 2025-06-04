@@ -18,7 +18,7 @@ object WorldRender {
 
         val p1 = SelectionManager.areaSelection.pos1
         val p2 = SelectionManager.areaSelection.pos2
-        val areaWorld  = SelectionManager.areaSelection.world
+        val areaWorld  = SelectionManager.areaSelection.world?.value
         val spSet = SelectionManager.switchSet
         val curWorld  = MinecraftClient.getInstance().world?.registryKey?.value
 
@@ -35,7 +35,7 @@ object WorldRender {
         }
 
         spSet.forEach { switch ->
-            if (switch.world != curWorld) return@forEach
+            if (switch.world.value != curWorld) return@forEach
             drawBlockOutline(switch.pos, 1f, 1f, 0f, matrices, camera, provider)
         }
     }

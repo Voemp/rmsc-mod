@@ -34,12 +34,12 @@ object SelectionManager {
         lastLeftClickTime = System.currentTimeMillis()
 
         if (areaSelection.pos1 != pos) {
-            if (areaSelection.world != null && areaSelection.world != world.registryKey.value) {
+            if (areaSelection.world != null && areaSelection.world != world.registryKey) {
                 player.sendMessage(Text.literal("§c两个选区点必须在同一维度！"), true)
                 return
             }
             areaSelection.pos1 = pos
-            areaSelection.world = world.registryKey.value
+            areaSelection.world = world.registryKey
             player.sendMessage(Text.literal("已选择点：§c${pos.x}, ${pos.y}, ${pos.z}"), true)
         } else {
             areaSelection.pos1 = null
@@ -57,7 +57,7 @@ object SelectionManager {
                     player.sendMessage(Text.literal("§c该方块不能作为开关"), true)
                     return
                 }
-                val switchPos = BlockPosWithWorld(world.registryKey.value, pos)
+                val switchPos = BlockPosWithWorld(world.registryKey, pos)
                 if (!switchSet.contains(switchPos)) {
                     if (switchSet.size >= 4) {
                         player.sendMessage(Text.literal("§c开关数量超过上限"), true)
@@ -73,12 +73,12 @@ object SelectionManager {
 
             else -> {
                 if (areaSelection.pos2 != pos) {
-                    if (areaSelection.world != null && areaSelection.world != world.registryKey.value) {
+                    if (areaSelection.world != null && areaSelection.world != world.registryKey) {
                         player.sendMessage(Text.literal("§c两个选区点必须在同一维度！"), true)
                         return
                     }
                     areaSelection.pos2 = pos
-                    areaSelection.world = world.registryKey.value
+                    areaSelection.world = world.registryKey
                     player.sendMessage(Text.literal("已选择点：§9${pos.x}, ${pos.y}, ${pos.z}"), true)
                 } else {
                     areaSelection.pos2 = null

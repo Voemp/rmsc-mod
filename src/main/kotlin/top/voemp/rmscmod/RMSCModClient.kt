@@ -45,8 +45,7 @@ object RMSCModClient : ClientModInitializer {
         })
 
         ServerWorldEvents.UNLOAD.register(ServerWorldEvents.Unload { server, world ->
-            SelectionManager.clearAll()
-            ConfigManager.curConfigId = null
+            ConfigManager.resetConfig()
         })
     }
 }

@@ -60,7 +60,7 @@ class EditConfigScreen(parent: Screen?) :
         val areaSelectionWorld = TextWidget(
             Text.translatable(
                 "menu.rmscmod.editConfigScreen.world",
-                SelectionManager.areaSelection.world ?: "None"
+                SelectionManager.areaSelection.world?.value ?: "None"
             ), textRenderer
         )
         val clearButtons = DirectionalLayoutWidget.horizontal().spacing(8)
@@ -86,7 +86,11 @@ class EditConfigScreen(parent: Screen?) :
             switchSelectionList.add(
                 SwitchPosWidget(
                     textRenderer,
-                    Text.translatable("menu.rmscmod.editConfigScreen.switchPos", index + 1, switch.world),
+                    Text.translatable(
+                        "menu.rmscmod.editConfigScreen.switchPos",
+                        index + 1,
+                        switch.world.value
+                    ),
                     switch.pos,
                     { x, y, z -> switch.setPos(x, y, z) },
                     {
@@ -116,46 +120,25 @@ class EditConfigScreen(parent: Screen?) :
         val saveButton = footerWidget.add(
             ButtonWidget.builder(
                 Text.translatable("menu.rmscmod.editConfigScreen.saveConfig")
-            ) {
-                val config = ConfigManager.build()
-                val confirmScreen: ConfirmScreen?
-                if (ConfigManager.isExistConfig(config.id)) {
-                    confirmScreen = ConfirmScreen(
-                        { confirmed ->
-                            if (confirmed) {
-                                ConfigManager.deleteConfig(config.id)
-                                ConfigManager.saveConfig(config)
-                                SelectionManager.clearAll()
-                            }
-                            refreshScreen()
-                        },
-                        Text.translatable("menu.rmscmod.editConfigScreen.confirmCover"),
-                        Text.translatable("menu.rmscmod.editConfigScreen.confirmCover.message")
-                    )
-                } else {
-                    confirmScreen = ConfirmScreen(
-                        { confirmed ->
-                            if (confirmed) {
-                                ConfigManager.saveConfig(config)
-                                SelectionManager.clearAll()
-                            }
-                            refreshScreen()
-                        },
-                        Text.translatable("menu.rmscmod.editConfigScreen.confirmSave"),
-                        Text.translatable("menu.rmscmod.editConfigScreen.confirmSave.message")
-                    )
-                }
-                client?.setScreen(confirmScreen)
-            }.build()
+            ) { onSave() }.width(100).build()
         )
         saveButton.active = SelectionManager.hasAreaSelection() || SelectionManager.hasSwitchSelection()
         if (!saveButton.active) {
-            saveButton.tooltip = Tooltip.of(Text.literal("请先选择区域或开关"))
+            saveButton.tooltip = Tooltip.of(Text.translatable("menu.rmscmod.editConfigScreen.saveConfig.tooltip"))
+        }
+        val cancelButton = footerWidget.add(
+            ButtonWidget.builder(
+                Text.translatable("menu.rmscmod.editConfigScreen.cancelEdit")
+            ) { onCancelEdit() }.width(100).build()
+        )
+        cancelButton.active = ConfigManager.getConfigId() != null
+        if (!cancelButton.active) {
+            cancelButton.tooltip = Tooltip.of(Text.translatable("menu.rmscmod.editConfigScreen.cancelEdit.tooltip"))
         }
         footerWidget.add(
             ButtonWidget.builder(
                 ScreenTexts.DONE
-            ) { onDone() }.build()
+            ) { onDone() }.width(100).build()
         )
     }
 
@@ -187,6 +170,33 @@ class EditConfigScreen(parent: Screen?) :
             2
         )
         RenderSystem.disableBlend()
+    }
+
+    private fun onSave() {
+        val config = ConfigManager.build()
+        val confirmTitleText: Text?
+        val confirmMessageText: Text?
+        if (ConfigManager.isExistConfig(config.id)) {
+            confirmTitleText = Text.translatable("menu.rmscmod.editConfigScreen.confirmSave")
+            confirmMessageText = Text.translatable("menu.rmscmod.editConfigScreen.confirmSave.message")
+        } else {
+            confirmTitleText = Text.translatable("menu.rmscmod.editConfigScreen.confirmOverride")
+            confirmMessageText = Text.translatable("menu.rmscmod.editConfigScreen.confirmOverride.message")
+        }
+        val confirmScreen = ConfirmScreen(
+            { confirmed ->
+                if (confirmed) ConfigManager.saveConfig(config)
+                refreshScreen()
+            },
+            confirmTitleText,
+            confirmMessageText
+        )
+        client?.setScreen(confirmScreen)
+    }
+
+    private fun onCancelEdit() {
+        ConfigManager.resetConfig()
+        refreshScreen()
     }
 
     private fun onDone() {

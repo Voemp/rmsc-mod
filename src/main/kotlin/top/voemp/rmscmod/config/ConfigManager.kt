@@ -3,7 +3,6 @@ package top.voemp.rmscmod.config
 import com.google.gson.Gson
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.text.Text
-import top.voemp.rmscmod.selection.BlockPosWithWorld
 import top.voemp.rmscmod.selection.SelectionManager
 import top.voemp.rmscmod.util.LevelIdentityProvider
 import java.nio.file.Files
@@ -14,8 +13,8 @@ import java.time.format.DateTimeFormatter
 object ConfigManager {
     private val NEW_CONFIG_NAME: Text = Text.translatable("config.rmscmod.newConfig")
     private var configName = NEW_CONFIG_NAME.string
-    val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
-    var curConfigId: String? = null
+    private var configId: String? = null
+    private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
 
     fun getConfigName(): String {
         return this.configName
@@ -25,13 +24,21 @@ object ConfigManager {
         this.configName = name
     }
 
+    fun getConfigId(): String? {
+        return this.configId
+    }
+
+    fun setConfigId(id: String?) {
+        this.configId = id
+    }
+
     private fun generateId(): String {
         return configName.replace("[^a-zA-Z0-9_]".toRegex(), "_") + "_" + System.currentTimeMillis()
     }
 
     fun build(): ModConfig {
         return ModConfig(
-            id = curConfigId ?: generateId(),
+            id = getConfigId() ?: generateId(),
             name = configName,
             time = LocalDateTime.now().format(formatter),
             switchStatus = false,
@@ -52,10 +59,10 @@ object ConfigManager {
     }
 
     fun saveConfig(config: ModConfig) {
+        if (isExistConfig(config.id)) deleteConfig(config.id)
         val configFile = configDir().resolve("${config.id}.json")
         Files.writeString(configFile, Gson().toJson(config))
-        setConfigName(NEW_CONFIG_NAME.string)
-        curConfigId = null
+        resetConfig()
     }
 
     fun loadConfig(id: String): ModConfig? {
@@ -76,7 +83,7 @@ object ConfigManager {
     }
 
     fun resolveConfig(config: ModConfig) {
-        curConfigId = config.id
+        setConfigId(config.id)
         setConfigName(config.name)
         SelectionManager.clearAll()
         if (config.areaSelection != null) {
@@ -89,5 +96,11 @@ object ConfigManager {
 
     fun deleteConfig(id: String) {
         Files.deleteIfExists(configDir().resolve("$id.json"))
+    }
+
+    fun resetConfig() {
+        SelectionManager.clearAll()
+        setConfigId(null)
+        setConfigName(NEW_CONFIG_NAME.string)
     }
 }

@@ -13,7 +13,7 @@ import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
 import top.voemp.rmscmod.config.ConfigManager
 import top.voemp.rmscmod.config.ModConfig
-import top.voemp.rmscmod.selection.SelectionManager
+import kotlin.math.abs
 
 @Environment(EnvType.CLIENT)
 class ConfigListScreen(parent: Screen?) :
@@ -36,18 +36,18 @@ class ConfigListScreen(parent: Screen?) :
         footerWidget.mainPositioner.alignHorizontalCenter()
         editButton = footerWidget.add(
             ButtonWidget.builder(
-                Text.translatable("menu.rmscmod.editConfig")
-            ) { button -> onEdit() }.width(100).build()
+                Text.translatable("menu.rmscmod.configListScreen.editConfig")
+            ) { onEdit() }.width(100).build()
         )
         deleteButton = footerWidget.add(
             ButtonWidget.builder(
-                Text.translatable("menu.rmscmod.deleteConfig")
-            ) { button -> onDelete() }.width(100).build()
+                Text.translatable("menu.rmscmod.configListScreen.deleteConfig")
+            ) { onDelete() }.width(100).build()
         )
         footerWidget.add(
             ButtonWidget.builder(
                 ScreenTexts.DONE
-            ) { button -> onDone() }.width(100).build()
+            ) { onDone() }.width(100).build()
         )
     }
 
@@ -113,6 +113,7 @@ class ConfigListScreen(parent: Screen?) :
         @Environment(EnvType.CLIENT)
         inner class ConfigEntry(val config: ModConfig) : Entry<ConfigEntry?>() {
             val id: String = config.id
+            var clickTime: Long = 0
 
             override fun render(
                 context: DrawContext?,
@@ -139,6 +140,32 @@ class ConfigListScreen(parent: Screen?) :
                     Text.of(config.time),
                     x + entryWidth - 5 - client.textRenderer.getWidth(Text.of(config.time.toString())),
                     y + 5,
+                    0x888888,
+                    false
+                )
+                val areaInfo = if (config.areaSelection != null) {
+                    val p1 = config.areaSelection.pos1!!
+                    val p2 = config.areaSelection.pos2!!
+                    val dx = abs(p1.x - p2.x) + 1
+                    val dy = abs(p1.y - p2.y) + 1
+                    val dz = abs(p2.z - p2.z) + 1
+                    Text.translatable(
+                        "menu.rmscmod.configListScreen.areaSelection",
+                        dx, dy, dz
+                    )
+                } else {
+                    Text.translatable("menu.rmscmod.configListScreen.noAreaSelection")
+                }
+                val switchInfo = if (config.switchSet != null) {
+                    Text.translatable("menu.rmscmod.configListScreen.switchSelection", config.switchSet.size)
+                } else {
+                    Text.translatable("menu.rmscmod.configListScreen.noSwitchSelection")
+                }
+                context?.drawText(
+                    client.textRenderer,
+                    Text.of(areaInfo.string + ", " + switchInfo.string),
+                    x + 5,
+                    y + 20,
                     0x888888,
                     false
                 )
