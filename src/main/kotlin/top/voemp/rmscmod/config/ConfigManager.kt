@@ -16,21 +16,13 @@ object ConfigManager {
     private var configId: String? = null
     private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
 
-    fun getConfigName(): String {
-        return this.configName
-    }
+    fun getConfigName(): String = configName
 
-    fun setConfigName(name: String) {
-        this.configName = name
-    }
+    fun setConfigName(name: String) = { configName = name }
 
-    fun getConfigId(): String? {
-        return this.configId
-    }
+    fun getConfigId(): String? = configId
 
-    fun setConfigId(id: String?) {
-        this.configId = id
-    }
+    fun setConfigId(id: String?) = { configId = id }
 
     private fun generateId(): String {
         return configName.replace("[^a-zA-Z0-9_]".toRegex(), "_") + "_" + System.currentTimeMillis()
