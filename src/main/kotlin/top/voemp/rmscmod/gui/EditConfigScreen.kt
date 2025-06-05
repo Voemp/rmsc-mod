@@ -177,11 +177,11 @@ class EditConfigScreen(parent: Screen?) :
         val confirmTitleText: Text?
         val confirmMessageText: Text?
         if (ConfigManager.isExistConfig(config.id)) {
-            confirmTitleText = Text.translatable("menu.rmscmod.editConfigScreen.confirmSave")
-            confirmMessageText = Text.translatable("menu.rmscmod.editConfigScreen.confirmSave.message")
-        } else {
             confirmTitleText = Text.translatable("menu.rmscmod.editConfigScreen.confirmOverride")
             confirmMessageText = Text.translatable("menu.rmscmod.editConfigScreen.confirmOverride.message")
+        } else {
+            confirmTitleText = Text.translatable("menu.rmscmod.editConfigScreen.confirmSave")
+            confirmMessageText = Text.translatable("menu.rmscmod.editConfigScreen.confirmSave.message")
         }
         val confirmScreen = ConfirmScreen(
             { confirmed ->

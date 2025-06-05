@@ -2,6 +2,7 @@ package top.voemp.rmscmod
 
 import net.fabricmc.api.ClientModInitializer
 import net.fabricmc.fabric.api.client.event.lifecycle.v1.ClientTickEvents
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerWorldEvents
 import net.fabricmc.fabric.api.event.player.AttackBlockCallback
 import net.fabricmc.fabric.api.event.player.UseBlockCallback
@@ -9,6 +10,7 @@ import net.minecraft.util.ActionResult
 import net.minecraft.util.Hand
 import top.voemp.rmscmod.config.ConfigManager
 import top.voemp.rmscmod.gui.ModMenuScreen
+import top.voemp.rmscmod.network.ModPayloads
 import top.voemp.rmscmod.option.ModKeyBinding
 import top.voemp.rmscmod.render.HudRender
 import top.voemp.rmscmod.render.WorldRender
@@ -31,14 +33,16 @@ object RMSCModClient : ClientModInitializer {
         })
 
         AttackBlockCallback.EVENT.register(AttackBlockCallback { player, world, hand, pos, _ ->
-            if (world.isClient && hand == Hand.MAIN_HAND && SelectionManager.isActive) {
+            if (!world.isClient) return@AttackBlockCallback ActionResult.PASS
+            if (hand == Hand.MAIN_HAND && SelectionManager.isActive) {
                 SelectionManager.handleLeftClick(player, world, pos)
                 ActionResult.FAIL
             } else ActionResult.PASS
         })
 
         UseBlockCallback.EVENT.register(UseBlockCallback { player, world, hand, hitResult ->
-            if (world.isClient && hand == Hand.MAIN_HAND && SelectionManager.isActive) {
+            if (!world.isClient) return@UseBlockCallback ActionResult.PASS
+            if (hand == Hand.MAIN_HAND && SelectionManager.isActive) {
                 SelectionManager.handleRightClick(player, world, hitResult.blockPos)
                 ActionResult.FAIL
             } else ActionResult.PASS
@@ -47,5 +51,10 @@ object RMSCModClient : ClientModInitializer {
         ServerWorldEvents.UNLOAD.register(ServerWorldEvents.Unload { server, world ->
             ConfigManager.resetConfig()
         })
+
+        ClientPlayNetworking.registerGlobalReceiver(ModPayloads.ItemListS2CPayload.ID) {  payload, context ->
+            if (context.client().world == null) return@registerGlobalReceiver
+            println(payload.itemList)
+        }
     }
 }

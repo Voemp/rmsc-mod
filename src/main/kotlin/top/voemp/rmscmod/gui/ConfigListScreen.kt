@@ -2,6 +2,7 @@ package top.voemp.rmscmod.gui
 
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
+import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -11,8 +12,10 @@ import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.gui.widget.DirectionalLayoutWidget
 import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
+import net.minecraft.util.Util
 import top.voemp.rmscmod.config.ConfigManager
 import top.voemp.rmscmod.config.ModConfig
+import top.voemp.rmscmod.network.ModPayloads
 import kotlin.math.abs
 
 @Environment(EnvType.CLIENT)
@@ -173,6 +176,11 @@ class ConfigListScreen(parent: Screen?) :
 
             override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
                 setSelected(this)
+                if (Util.getMeasuringTimeMs() - clickTime < 250L) {
+                    val payload = ModPayloads.AreaSelectionC2SPayload(config.areaSelection!!)
+                    ClientPlayNetworking.send(payload)
+                }
+                clickTime = Util.getMeasuringTimeMs()
                 return super.mouseClicked(mouseX, mouseY, button)
             }
 

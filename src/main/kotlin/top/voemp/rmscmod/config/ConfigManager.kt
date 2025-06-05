@@ -18,11 +18,15 @@ object ConfigManager {
 
     fun getConfigName(): String = configName
 
-    fun setConfigName(name: String) = { configName = name }
+    fun setConfigName(name: String) {
+        configName = name
+    }
 
     fun getConfigId(): String? = configId
 
-    fun setConfigId(id: String?) = { configId = id }
+    fun setConfigId(id: String?) {
+        configId = id
+    }
 
     private fun generateId(): String {
         return configName.replace("[^a-zA-Z0-9_]".toRegex(), "_") + "_" + System.currentTimeMillis()
