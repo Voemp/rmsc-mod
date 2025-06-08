@@ -146,7 +146,7 @@ class ConfigListScreen(parent: Screen?) :
                     0x888888,
                     false
                 )
-                val areaInfo = if (config.areaSelection != null) {
+                val areaInfo = if (config.areaSelection?.world != null) {
                     val p1 = config.areaSelection.pos1!!
                     val p2 = config.areaSelection.pos2!!
                     val dx = abs(p1.x - p2.x) + 1
@@ -177,8 +177,14 @@ class ConfigListScreen(parent: Screen?) :
             override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
                 setSelected(this)
                 if (Util.getMeasuringTimeMs() - clickTime < 250L) {
-                    val payload = ModPayloads.AreaSelectionC2SPayload(config.areaSelection!!)
-                    ClientPlayNetworking.send(payload)
+                    config.areaSelection?.let {
+                        val payload = ModPayloads.AreaSelectionC2SPayload(it)
+                        ClientPlayNetworking.send(payload)
+                    }
+                    config.switchSet?.let {
+                        val payload = ModPayloads.SwitchListC2SPayload(it.toList())
+                        ClientPlayNetworking.send(payload)
+                    }
                 }
                 clickTime = Util.getMeasuringTimeMs()
                 return super.mouseClicked(mouseX, mouseY, button)

@@ -39,7 +39,7 @@ object ConfigManager {
             name = configName,
             time = LocalDateTime.now().format(formatter),
             switchStatus = false,
-            areaSelection = SelectionManager.areaSelection,
+            areaSelection = if (SelectionManager.hasAreaSelection()) SelectionManager.areaSelection else null,
             switchSet = if (SelectionManager.hasSwitchSelection()) SelectionManager.switchSet else null
         )
     }
