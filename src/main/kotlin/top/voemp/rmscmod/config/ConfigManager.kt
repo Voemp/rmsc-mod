@@ -3,6 +3,7 @@ package top.voemp.rmscmod.config
 import com.google.gson.Gson
 import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.text.Text
+import top.voemp.rmscmod.RMSCMod.MOD_ID
 import top.voemp.rmscmod.selection.SelectionManager
 import top.voemp.rmscmod.util.LevelIdentityProvider
 import java.nio.file.Files
@@ -45,7 +46,7 @@ object ConfigManager {
 
     fun configDir(): Path {
         val levelName = LevelIdentityProvider.getLevelIdentifier()
-        val configDir = FabricLoader.getInstance().configDir.resolve("rmscmod/${levelName}")
+        val configDir = FabricLoader.getInstance().configDir.resolve("${MOD_ID}/${levelName}")
         Files.createDirectories(configDir)
         return configDir
     }

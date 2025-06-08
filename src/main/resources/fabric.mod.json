@@ -11,7 +11,7 @@
 		"sources": "https://github.com/Voemp/rmsc-mod"
 	},
 	"license": "MIT",
-	"icon": "assets/rmsc-mod/icon.png",
+	"icon": "assets/rmscmod/icon.png",
 	"environment": "*",
 	"entrypoints": {
 		"main": [

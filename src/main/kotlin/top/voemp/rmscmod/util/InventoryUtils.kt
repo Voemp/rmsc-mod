@@ -1,23 +1,11 @@
 package top.voemp.rmscmod.util
 
-import net.minecraft.block.ChestBlock
 import net.minecraft.inventory.Inventory
 import net.minecraft.server.MinecraftServer
 import net.minecraft.util.math.BlockPos
-import net.minecraft.world.World
 import top.voemp.rmscmod.selection.AreaPosWithWorld
 
 object InventoryUtils {
-    fun getInventory(world: World, pos: BlockPos): Inventory? {
-        val state = world.getBlockState(pos)
-        return if (state.block is ChestBlock) {
-            ChestBlock.getInventory(state.block as ChestBlock, state, world, pos, false)
-        } else {
-            val be = world.getBlockEntity(pos)
-            be as? Inventory
-        }
-    }
-
     fun getItemsFromInventory(server: MinecraftServer, area: AreaPosWithWorld): Map<String, Int> {
         val itemCounts = mutableMapOf<String, Int>()
         val world = server.getWorld(area.world)
