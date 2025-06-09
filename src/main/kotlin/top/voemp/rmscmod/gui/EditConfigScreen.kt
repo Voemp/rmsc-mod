@@ -132,7 +132,7 @@ class EditConfigScreen(parent: Screen?) :
                 Text.translatable("menu.rmscmod.editConfigScreen.cancelEdit")
             ) { onCancelEdit() }.width(100).build()
         )
-        cancelButton.active = ConfigManager.getConfigId() != null
+        cancelButton.active = ConfigManager.getEditingName() != null
         if (!cancelButton.active) {
             cancelButton.tooltip = Tooltip.of(Text.translatable("menu.rmscmod.editConfigScreen.cancelEdit.tooltip"))
         }
@@ -177,7 +177,7 @@ class EditConfigScreen(parent: Screen?) :
         val config = ConfigManager.build()
         val confirmTitleText: Text?
         val confirmMessageText: Text?
-        if (ConfigManager.isExistConfig(config.id)) {
+        if (ConfigManager.isExistConfig(config.name)) {
             confirmTitleText = Text.translatable("menu.rmscmod.editConfigScreen.confirmOverride")
             confirmMessageText = Text.translatable("menu.rmscmod.editConfigScreen.confirmOverride.message")
         } else {

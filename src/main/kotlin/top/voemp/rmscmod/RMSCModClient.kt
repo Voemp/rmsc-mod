@@ -52,11 +52,6 @@ object RMSCModClient : ClientModInitializer {
             ConfigManager.resetConfig()
         })
 
-        ClientPlayNetworking.registerGlobalReceiver(ModPayloads.ItemListS2CPayload.ID) {  payload, context ->
-            if (context.client().world == null) return@registerGlobalReceiver
-            println(payload.itemList)
-        }
-
         ClientPlayNetworking.registerGlobalReceiver(ModPayloads.SwitchStatusS2CPayload.ID) {  payload, context ->
             if (context.client().world == null) return@registerGlobalReceiver
             println(payload.switchStatus)

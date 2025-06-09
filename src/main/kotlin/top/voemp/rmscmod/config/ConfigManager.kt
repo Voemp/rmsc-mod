@@ -8,36 +8,27 @@ import top.voemp.rmscmod.selection.SelectionManager
 import top.voemp.rmscmod.util.LevelIdentityProvider
 import java.nio.file.Files
 import java.nio.file.Path
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
 
 object ConfigManager {
     private val NEW_CONFIG_NAME: Text = Text.translatable("config.rmscmod.newConfig")
-    private var configName = NEW_CONFIG_NAME.string
-    private var configId: String? = null
-    private val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
+    private val NEW_CONFIG_NAME_SUFFIX: Text = Text.translatable("config.rmscmod.newConfig.suffix", "%d")
+    private var configName: String = genConfigName(NEW_CONFIG_NAME.string)
+    private var editingName: String? = null
 
     fun getConfigName(): String = configName
-
     fun setConfigName(name: String) {
         configName = name
     }
 
-    fun getConfigId(): String? = configId
-
-    fun setConfigId(id: String?) {
-        configId = id
-    }
-
-    private fun generateId(): String {
-        return configName.replace("[^a-zA-Z0-9_]".toRegex(), "_") + "_" + System.currentTimeMillis()
+    fun getEditingName(): String? = editingName
+    fun setEditingName(name: String?) {
+        editingName = name
     }
 
     fun build(): ModConfig {
         return ModConfig(
-            id = getConfigId() ?: generateId(),
-            name = configName,
-            time = LocalDateTime.now().format(formatter),
+            name = if (editingName != null) configName else genConfigName(configName),
+            time = System.currentTimeMillis(),
             switchStatus = false,
             areaSelection = if (SelectionManager.hasAreaSelection()) SelectionManager.areaSelection else null,
             switchSet = if (SelectionManager.hasSwitchSelection()) SelectionManager.switchSet else null
@@ -51,19 +42,19 @@ object ConfigManager {
         return configDir
     }
 
-    fun isExistConfig(id: String): Boolean {
-        return Files.exists(configDir().resolve("${id}.json"))
+    fun isExistConfig(name: String): Boolean {
+        return Files.exists(configDir().resolve("${name}.json"))
     }
 
     fun saveConfig(config: ModConfig) {
-        if (isExistConfig(config.id)) deleteConfig(config.id)
-        val configFile = configDir().resolve("${config.id}.json")
+        if (editingName != null) deleteConfig(editingName!!)
+        val configFile = configDir().resolve("${config.name}.json")
         Files.writeString(configFile, Gson().toJson(config))
         resetConfig()
     }
 
-    fun loadConfig(id: String): ModConfig? {
-        val file = configDir().resolve("$id.json")
+    fun loadConfig(name: String): ModConfig? {
+        val file = configDir().resolve("$name.json")
         return if (Files.exists(file)) {
             Gson().fromJson(Files.readString(file), ModConfig::class.java)
         } else null
@@ -76,11 +67,11 @@ object ConfigManager {
                 configs.add(Gson().fromJson(Files.readString(file), ModConfig::class.java))
             }
         }
-        return configs
+        return configs.sortedBy { it.time }.reversed()
     }
 
     fun resolveConfig(config: ModConfig) {
-        setConfigId(config.id)
+        setEditingName(config.name)
         setConfigName(config.name)
         SelectionManager.clearAll()
         if (config.areaSelection != null) {
@@ -91,13 +82,24 @@ object ConfigManager {
         }
     }
 
-    fun deleteConfig(id: String) {
-        Files.deleteIfExists(configDir().resolve("$id.json"))
+    fun deleteConfig(name: String) {
+        Files.deleteIfExists(configDir().resolve("$name.json"))
     }
 
     fun resetConfig() {
         SelectionManager.clearAll()
-        setConfigId(null)
-        setConfigName(NEW_CONFIG_NAME.string)
+        setConfigName(genConfigName(NEW_CONFIG_NAME.string))
+        setEditingName(null)
+    }
+
+    private fun genConfigName(name: String): String {
+        if (!isExistConfig(name)) return name
+        val suffixTemplate = NEW_CONFIG_NAME_SUFFIX.string
+        println(suffixTemplate)
+        for (i in 2..99) {
+            val newName = name + String.format(suffixTemplate, i)
+            if (!isExistConfig(newName)) return newName
+        }
+        return name + " " + System.currentTimeMillis().toString(36)
     }
 }

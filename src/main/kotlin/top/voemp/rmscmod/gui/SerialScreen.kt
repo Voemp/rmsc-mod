@@ -20,6 +20,7 @@ class SerialScreen(parent: Screen?) :
     }
 
     private var connectButton: ButtonWidget? = null
+    private var disconnectButton: ButtonWidget? = null
 
     override fun initBody() {
         val grid = layout.addBody(GridWidget()).setRowSpacing(8).createAdder(1)
@@ -54,12 +55,17 @@ class SerialScreen(parent: Screen?) :
         connectButton = footerWidget.add(
             ButtonWidget.builder(
                 Text.translatable("menu.rmscmod.serialScreen.connect")
-            ) { onConnect() }.build()
+            ) { onConnect() }.width(100).build()
+        )
+        disconnectButton = footerWidget.add(
+            ButtonWidget.builder(
+                Text.translatable("menu.rmscmod.serialScreen.disconnect")
+            ) { onDisconnect() }.width(100).build()
         )
         footerWidget.add(
             ButtonWidget.builder(
                 ScreenTexts.DONE
-            ) { button -> onDone() }.build()
+            ) { button -> onDone() }.width(100).build()
         )
         refreshButtonActive()
     }
@@ -100,11 +106,16 @@ class SerialScreen(parent: Screen?) :
         }
     }
 
+    private fun onDisconnect() {
+        SerialManager.close()
+    }
+
     private fun onDone() {
         client?.setScreen(parent)
     }
 
     private fun refreshButtonActive() {
         connectButton?.active = SerialManager.portDescriptor.isNotEmpty() && SerialManager.baudRate > 0
+        // disconnectButton?.active = SerialManager.isConnected
     }
 }

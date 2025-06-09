@@ -16,6 +16,11 @@ import net.minecraft.util.Util
 import top.voemp.rmscmod.config.ConfigManager
 import top.voemp.rmscmod.config.ModConfig
 import top.voemp.rmscmod.network.ModPayloads
+import top.voemp.rmscmod.serial.DataManager
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 import kotlin.math.abs
 
 @Environment(EnvType.CLIENT)
@@ -64,7 +69,7 @@ class ConfigListScreen(parent: Screen?) :
     private fun onEdit() {
         val configEntry: ConfigListWidget.ConfigEntry? = configSelectionList?.selectedOrNull
         if (configEntry != null) {
-            val config = ConfigManager.loadConfig(configEntry.id)
+            val config = ConfigManager.loadConfig(configEntry.name)
             config?.let { ConfigManager.resolveConfig(it) }
             client?.setScreen(EditConfigScreen(this))
         }
@@ -72,7 +77,7 @@ class ConfigListScreen(parent: Screen?) :
 
     private fun onDelete() {
         val configEntry: ConfigListWidget.ConfigEntry? = configSelectionList?.selectedOrNull
-        if (configEntry != null) ConfigManager.deleteConfig(configEntry.id)
+        if (configEntry != null) ConfigManager.deleteConfig(configEntry.name)
         refreshScreen()
     }
 
@@ -115,8 +120,13 @@ class ConfigListScreen(parent: Screen?) :
 
         @Environment(EnvType.CLIENT)
         inner class ConfigEntry(val config: ModConfig) : Entry<ConfigEntry?>() {
-            val id: String = config.id
+            val name: String = config.name
             var clickTime: Long = 0
+            val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
+            val timeText: Text? = Text.of(
+                LocalDateTime.ofInstant(Instant.ofEpochMilli(config.time), ZoneId.systemDefault())
+                    .format(formatter)
+            )
 
             override fun render(
                 context: DrawContext?,
@@ -140,8 +150,8 @@ class ConfigListScreen(parent: Screen?) :
                 )
                 context?.drawText(
                     client.textRenderer,
-                    Text.of(config.time),
-                    x + entryWidth - 5 - client.textRenderer.getWidth(Text.of(config.time.toString())),
+                    timeText,
+                    x + entryWidth - 5 - client.textRenderer.getWidth(timeText),
                     y + 5,
                     0x888888,
                     false
@@ -177,10 +187,7 @@ class ConfigListScreen(parent: Screen?) :
             override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
                 setSelected(this)
                 if (Util.getMeasuringTimeMs() - clickTime < 250L) {
-                    config.areaSelection?.let {
-                        val payload = ModPayloads.AreaSelectionC2SPayload(it)
-                        ClientPlayNetworking.send(payload)
-                    }
+                    DataManager.getInventoryData(config.name)
                     config.switchSet?.let {
                         val payload = ModPayloads.SwitchListC2SPayload(it.toList())
                         ClientPlayNetworking.send(payload)

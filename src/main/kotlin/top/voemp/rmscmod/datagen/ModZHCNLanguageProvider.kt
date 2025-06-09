@@ -33,7 +33,7 @@ class ModZHCNLanguageProvider : FabricLanguageProvider {
         translationBuilder?.add("menu.rmscmod.editConfigScreen.confirmSave", "保存配置")
         translationBuilder?.add("menu.rmscmod.editConfigScreen.confirmSave.message", "确定要保存配置吗？")
         translationBuilder?.add("menu.rmscmod.editConfigScreen.confirmOverride", "覆盖配置")
-        translationBuilder?.add("menu.rmscmod.editConfigScreen.confirmOverride.message", "已存在相同 ID 的配置，这将覆盖当前配置。确定覆盖？")
+        translationBuilder?.add("menu.rmscmod.editConfigScreen.confirmOverride.message", "已存在相同名称的配置，这将覆盖当前配置。确定覆盖？")
         translationBuilder?.add("menu.rmscmod.configListScreen.title", "配置列表")
         translationBuilder?.add("menu.rmscmod.configListScreen.areaSelection", "选区大小：%s x %s x %s")
         translationBuilder?.add("menu.rmscmod.configListScreen.noAreaSelection", "没有选区")
@@ -45,7 +45,9 @@ class ModZHCNLanguageProvider : FabricLanguageProvider {
         translationBuilder?.add("menu.rmscmod.serialScreen.enterPortDescriptor", "端口")
         translationBuilder?.add("menu.rmscmod.serialScreen.enterBaudRate", "波特率")
         translationBuilder?.add("menu.rmscmod.serialScreen.connect", "连接")
+        translationBuilder?.add("menu.rmscmod.serialScreen.disconnect", "断开")
         translationBuilder?.add("config.rmscmod.newConfig", "新的配置")
+        translationBuilder?.add("config.rmscmod.newConfig.suffix", "（%s）")
         translationBuilder?.add("key.rmscmod.openMenu", "打开 RMSC 菜单")
         translationBuilder?.add("category.rmscmod", "RMSC 模组")
     }
