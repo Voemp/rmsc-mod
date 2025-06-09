@@ -7,8 +7,10 @@ import kotlin.concurrent.thread
 
 object SerialManager {
     private var serialPort: SerialPort? = null
+    var portDescriptor: String = ""
+    var baudRate: Int = 115200
 
-    fun connect(portDescriptor: String, baudRate: Int = 9600): Boolean {
+    fun connect(): Boolean {
         serialPort = SerialPort.getCommPort(portDescriptor)
         serialPort?.baudRate = baudRate
         return serialPort?.openPort() ?: false

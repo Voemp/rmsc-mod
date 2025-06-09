@@ -14,6 +14,7 @@ import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
 import net.minecraft.util.math.BlockPos
 import top.voemp.rmscmod.config.ConfigManager
+import top.voemp.rmscmod.gui.component.LabeledFieldWidget
 import top.voemp.rmscmod.selection.SelectionManager
 import top.voemp.rmscmod.util.GuiUtils.createLabeledPosField
 import top.voemp.rmscmod.util.GuiUtils.createPosField
@@ -22,7 +23,7 @@ import top.voemp.rmscmod.util.GuiUtils.createPosField
 class EditConfigScreen(parent: Screen?) :
     GameOptionsScreen(parent, null, Text.translatable("menu.rmscmod.editConfigScreen.title")) {
     companion object {
-        private val ENTER_NAME_TEXT: Text = Text.translatable("menu.rmscmod.editConfigScreen.enterName")
+        private val ENTER_CONFIG_NAME: Text = Text.translatable("menu.rmscmod.editConfigScreen.enterConfigName")
     }
 
     override fun initBody() {
@@ -33,7 +34,7 @@ class EditConfigScreen(parent: Screen?) :
             textRenderer,
             140,
             20,
-            ENTER_NAME_TEXT,
+            ENTER_CONFIG_NAME,
             ConfigManager.getConfigName(),
         ) { newName ->
             ConfigManager.setConfigName(newName)
@@ -206,24 +207,6 @@ class EditConfigScreen(parent: Screen?) :
 
     private fun refreshScreen() {
         client?.setScreen(EditConfigScreen(parent))
-    }
-
-    @Environment(EnvType.CLIENT)
-    class LabeledFieldWidget(
-        textRenderer: TextRenderer,
-        width: Int,
-        height: Int,
-        label: Text,
-        initialText: String,
-        onTextChanged: (String) -> Unit
-    ) : DirectionalLayoutWidget(0, 0, DisplayAxis.VERTICAL) {
-        val textField: TextFieldWidget = TextFieldWidget(textRenderer, width, height, label)
-
-        init {
-            textField.text = initialText
-            textField.setChangedListener { newText -> onTextChanged(newText) }
-            add(LayoutWidgets.createLabeledWidget(textRenderer, textField, label))
-        }
     }
 
     @Environment(EnvType.CLIENT)

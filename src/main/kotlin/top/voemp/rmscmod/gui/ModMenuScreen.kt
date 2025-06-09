@@ -13,7 +13,7 @@ import top.voemp.rmscmod.option.ModKeyBinding
 @Environment(EnvType.CLIENT)
 class ModMenuScreen : GameOptionsScreen(null, null, Text.translatable("menu.rmscmod.title")) {
     override fun initBody() {
-        val grid = layout.addBody(GridWidget()).setColumnSpacing(32).createAdder(2)
+        val grid = layout.addBody(GridWidget()).setRowSpacing(16).setColumnSpacing(32).createAdder(2)
         grid.add(
             ButtonWidget.builder(Text.translatable("menu.rmscmod.editConfigScreen.title")) { button ->
                 client?.setScreen(
@@ -25,6 +25,13 @@ class ModMenuScreen : GameOptionsScreen(null, null, Text.translatable("menu.rmsc
             ButtonWidget.builder(Text.translatable("menu.rmscmod.configListScreen.title")) { button ->
                 client?.setScreen(
                     ConfigListScreen(this)
+                )
+            }.build()
+        )
+        grid.add(
+            ButtonWidget.builder(Text.translatable("menu.rmscmod.serialScreen.title")) { button ->
+                client?.setScreen(
+                    SerialScreen(this)
                 )
             }.build()
         )
