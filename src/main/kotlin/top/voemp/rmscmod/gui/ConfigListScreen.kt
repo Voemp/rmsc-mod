@@ -187,6 +187,7 @@ class ConfigListScreen(parent: Screen?) :
             override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
                 setSelected(this)
                 if (Util.getMeasuringTimeMs() - clickTime < 250L) {
+                    DataManager.getConfigData()
                     DataManager.getInventoryData(config.name)
                     config.switchSet?.let {
                         val payload = ModPayloads.SwitchListC2SPayload(it.toList())

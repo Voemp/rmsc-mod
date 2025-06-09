@@ -95,7 +95,6 @@ object ConfigManager {
     private fun genConfigName(name: String): String {
         if (!isExistConfig(name)) return name
         val suffixTemplate = NEW_CONFIG_NAME_SUFFIX.string
-        println(suffixTemplate)
         for (i in 2..99) {
             val newName = name + String.format(suffixTemplate, i)
             if (!isExistConfig(newName)) return newName

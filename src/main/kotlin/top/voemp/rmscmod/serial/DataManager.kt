@@ -5,10 +5,22 @@ import top.voemp.rmscmod.config.ConfigManager
 import top.voemp.rmscmod.network.ModPayloads
 
 object DataManager {
-    private var configData: List<String>? = null
+    private var configData: MutableList<SimplifyConfig>? = null
     private var inventoryData: List<String>? = null
 
-    fun getConfigData() {}
+    fun getConfigData() {
+        configData = mutableListOf()
+        ConfigManager.loadAllConfigs().forEach {
+            configData?.add(
+                SimplifyConfig(
+                    it.name,
+                    it.switchStatus,
+                    it.areaSelection != null,
+                    it.switchSet != null
+                )
+            )
+        }
+    }
 
     fun getInventoryData(name: String) {
         val config = ConfigManager.loadConfig(name)
