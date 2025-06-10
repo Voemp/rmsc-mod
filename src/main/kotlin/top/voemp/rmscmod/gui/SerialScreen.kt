@@ -19,6 +19,7 @@ class SerialScreen(parent: Screen?) :
         private val ENTER_BAUD_RATE = Text.translatable("menu.rmscmod.serialScreen.enterBaudRate")
     }
 
+    private var saveButton: ButtonWidget? = null
     private var connectButton: ButtonWidget? = null
     private var disconnectButton: ButtonWidget? = null
 
@@ -29,9 +30,9 @@ class SerialScreen(parent: Screen?) :
             120,
             20,
             ENTER_PORT_DESCRIPTOR,
-            SerialManager.portDescriptor
+            SerialManager.serialConfig.portDescriptor
         ) {
-            SerialManager.portDescriptor = it
+            SerialManager.serialConfig.portDescriptor = it
             refreshButtonActive()
         }
         val baudRateField = LabeledFieldWidget(
@@ -39,14 +40,18 @@ class SerialScreen(parent: Screen?) :
             120,
             20,
             ENTER_BAUD_RATE,
-            SerialManager.baudRate.toString()
+            SerialManager.serialConfig.baudRate.toString()
         ) {
             val baudRate = it.toIntOrNull() ?: 0
-            SerialManager.baudRate = baudRate
+            SerialManager.serialConfig.baudRate = baudRate
             refreshButtonActive()
         }
+        saveButton = ButtonWidget.builder(
+            Text.translatable("menu.rmscmod.serialScreen.save")
+        ) { onSave() }.width(120).build()
         grid.add(portDescriptorField)
         grid.add(baudRateField)
+        grid.add(saveButton)
     }
 
     override fun initFooter() {
@@ -65,7 +70,7 @@ class SerialScreen(parent: Screen?) :
         footerWidget.add(
             ButtonWidget.builder(
                 ScreenTexts.DONE
-            ) { button -> onDone() }.width(100).build()
+            ) { onDone() }.width(100).build()
         )
         refreshButtonActive()
     }
@@ -100,14 +105,26 @@ class SerialScreen(parent: Screen?) :
         RenderSystem.disableBlend()
     }
 
-    private fun onConnect() {
-        if (client != null && SerialManager.connect()) {
-            SerialManager.startSerialListener(client!!)
+    private fun onSave() {
+        SerialManager.saveConfig()
+        if (SerialManager.portIsOpen()) {
+            SerialManager.closePort()
+            Thread.sleep(1000)
         }
+        SerialManager.openPort()
+        refreshScreen()
+    }
+
+    private fun onConnect() {
+        if (client == null) return
+        SerialManager.isConnected = true
+        SerialManager.startSerialListener(client!!)
+        refreshScreen()
     }
 
     private fun onDisconnect() {
-        SerialManager.close()
+        SerialManager.isConnected = false
+        refreshScreen()
     }
 
     private fun onDone() {
@@ -115,7 +132,12 @@ class SerialScreen(parent: Screen?) :
     }
 
     private fun refreshButtonActive() {
-        connectButton?.active = SerialManager.portDescriptor.isNotEmpty() && SerialManager.baudRate > 0
-        // disconnectButton?.active = SerialManager.isConnected
+        saveButton?.active = SerialManager.hasConfig()
+        connectButton?.active = SerialManager.hasConfig() && !SerialManager.isConnected
+        disconnectButton?.active = SerialManager.isConnected
+    }
+
+    private fun refreshScreen() {
+        client?.setScreen(SerialScreen(parent))
     }
 }

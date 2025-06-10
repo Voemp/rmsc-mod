@@ -15,9 +15,6 @@ object RMSCMod : ModInitializer {
     val logger: Logger = LoggerFactory.getLogger(MOD_ID)
 
     override fun onInitialize() {
-        // 字体初始化
-        FontBitmap.initFont()
-
         ModPayloads.registerPayloads()
 
         ServerPlayNetworking.registerGlobalReceiver(ModPayloads.AreaSelectionC2SPayload.ID) { payload, context ->

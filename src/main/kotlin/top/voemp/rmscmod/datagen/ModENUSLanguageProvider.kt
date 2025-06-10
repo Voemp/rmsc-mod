@@ -44,6 +44,7 @@ class ModENUSLanguageProvider : FabricLanguageProvider {
         translationBuilder?.add("menu.rmscmod.serialScreen.title",  "Connect Device")
         translationBuilder?.add("menu.rmscmod.serialScreen.enterPortDescriptor", "Port Descriptor")
         translationBuilder?.add("menu.rmscmod.serialScreen.enterBaudRate", "Baud Rate")
+        translationBuilder?.add("menu.rmscmod.serialScreen.save", "Save Serial Config")
         translationBuilder?.add("menu.rmscmod.serialScreen.connect", "Connect")
         translationBuilder?.add("menu.rmscmod.serialScreen.disconnect", "Disconnect")
         translationBuilder?.add("config.rmscmod.newConfig", "New Config")

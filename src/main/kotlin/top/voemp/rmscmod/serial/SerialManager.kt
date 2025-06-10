@@ -1,54 +1,97 @@
 package top.voemp.rmscmod.serial
 
 import com.fazecast.jSerialComm.SerialPort
+import com.google.gson.Gson
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
+import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.client.MinecraftClient
+import top.voemp.rmscmod.RMSCMod.MOD_ID
 import top.voemp.rmscmod.RMSCMod.logger
+import top.voemp.rmscmod.serial.DataUtils.lineOf
+import java.nio.file.Files
+import java.nio.file.Path
 
 object SerialManager {
     private var serialPort: SerialPort? = null
-    private var serialListener: Job? = null
-    var portDescriptor: String = "COM4"
-    var baudRate: Int = 115200
+    private var serialScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
+    var serialConfig: SerialConfig = SerialConfig()
+    var isConnected = false
 
-    fun connect(): Boolean {
-        serialPort = SerialPort.getCommPort(portDescriptor)
-        serialPort?.baudRate = baudRate
+    fun init() {
+        serialScope.launch {
+            serialConfig = loadConfig()
+            openPort()
+        }
+    }
+
+    private fun configDir(): Path {
+        val configDir = FabricLoader.getInstance().configDir.resolve(MOD_ID)
+        Files.createDirectories(configDir)
+        return configDir
+    }
+
+    fun saveConfig() {
+        val configFile = configDir().resolve("serial_config.json")
+        Files.writeString(configFile, Gson().toJson(serialConfig))
+    }
+
+    private fun loadConfig(): SerialConfig {
+        val configFile = configDir().resolve("serial_config.json")
+        return if (Files.exists(configFile)) {
+            Gson().fromJson(Files.readString(configFile), SerialConfig::class.java)
+        } else SerialConfig()
+    }
+
+    fun hasConfig(): Boolean {
+        return serialConfig.portDescriptor.isNotEmpty() && serialConfig.baudRate > 0
+    }
+
+    fun portIsOpen(): Boolean {
+        return serialPort?.isOpen ?: false
+    }
+
+    fun openPort(): Boolean {
+        serialPort = SerialPort.getCommPort(serialConfig.portDescriptor)
+        serialPort?.baudRate = serialConfig.baudRate
         return serialPort?.openPort() ?: false
     }
 
-    fun read(): String? {
+    fun closePort() {
+        serialPort?.closePort()
+        logger.info("Serial port closed")
+    }
+
+    fun read(): List<Byte>? {
         val port = serialPort ?: return null
         val buffer = ByteArray(1024)
         port.readBytes(buffer, buffer.size, 0)
-        val offset = buffer.indexOf(64)
-        val numBytes = buffer.indexOf(1.toByte()) + 26
-        return if (offset >= 0) String(buffer, offset, 26) else null
+        val start = buffer.indexOf(38.toByte())
+        val end = buffer.indexOf(10.toByte())
+        return if (start >= 0 && end >= 0) buffer.slice(start + 1 until end) else null
     }
 
-    fun write(data: String) {
-        serialPort?.writeBytes(data.toByteArray(), data.length)
-    }
-
-    fun close() {
-        serialPort?.closePort()
+    fun write(data: List<Byte>) {
+        serialPort?.writeBytes(data.toByteArray(), data.size)
     }
 
     fun startSerialListener(client: MinecraftClient) {
-        serialListener = CoroutineScope(Dispatchers.IO).launch {
-            while (serialPort?.isOpen == true) {
-                Thread.sleep(500)
+        serialScope.launch {
+            while (portIsOpen() && isConnected) {
+                Thread.sleep(100)
                 val data = read()
-                if (data != null) {
-                    client.execute {
-                        logger.info("Received data: $data")
+                if (data == null || data.isEmpty()) continue
+                client.execute {
+                    logger.info("Received data: $data")
+                    when (data[0]) {
+                        1.toByte(), 2.toByte(), 3.toByte() -> write(lineOf("黏液球 65"))
+                        4.toByte(), 5.toByte() -> write(lineOf("黏液球 64"))
+                        6.toByte() -> write(lineOf("黏液球 63"))
                     }
                 }
             }
-            logger.info("Serial port closed")
+            logger.info("Serial listener stopped")
         }
     }
 }

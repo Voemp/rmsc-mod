@@ -44,6 +44,7 @@ class ModZHCNLanguageProvider : FabricLanguageProvider {
         translationBuilder?.add("menu.rmscmod.serialScreen.title", "连接设备")
         translationBuilder?.add("menu.rmscmod.serialScreen.enterPortDescriptor", "端口")
         translationBuilder?.add("menu.rmscmod.serialScreen.enterBaudRate", "波特率")
+        translationBuilder?.add("menu.rmscmod.serialScreen.save", "保存串口配置")
         translationBuilder?.add("menu.rmscmod.serialScreen.connect", "连接")
         translationBuilder?.add("menu.rmscmod.serialScreen.disconnect", "断开")
         translationBuilder?.add("config.rmscmod.newConfig", "新的配置")

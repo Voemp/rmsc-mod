@@ -21,10 +21,8 @@ object FontBitmap {
     private val fontDir = FabricLoader.getInstance().configDir.resolve("${MOD_ID}/${FONT_FILE}")
     private var fontData: Map<String, String>? = null
 
-    fun initFont() {
-        CoroutineScope(Dispatchers.IO).launch {
-            loadFont()
-        }
+    fun init() {
+        CoroutineScope(Dispatchers.IO).launch { loadFont() }
     }
 
     private suspend fun loadFont(): Map<String, String> {
@@ -62,9 +60,9 @@ object FontBitmap {
         }
     }
 
-    fun getValue(key: String): List<UByte> = fontData?.get(key)?.split(",")?.map { it.toUByte() } ?: emptyList()
+    fun getValue(key: String): List<Byte> = fontData?.get(key)?.split(",")?.map { it.toUByte().toByte() } ?: emptyList()
 
-    fun string2Unicode(str: String): List<String> = str.map { "U${it.code.toString(16)}" }
+    fun string2Unicode(str: String): List<String> = str.map { "U%04x".format(it.code) }
 
-    fun of(str: String): List<UByte> = string2Unicode(str).flatMap { getValue(it) }
+    fun of(str: String): List<Byte> = string2Unicode(str).flatMap { getValue(it) }
 }
