@@ -87,7 +87,7 @@ object SerialManager {
                     when (data[0]) {
                         1.toByte(), 2.toByte(), 3.toByte() -> write(lineOf("黏液球 65"))
                         4.toByte(), 5.toByte() -> write(lineOf("黏液球 64"))
-                        6.toByte() -> write(lineOf("黏液球 63"))
+                        6.toByte() -> write(lineOf("凋零骷髅头颅 162.3K"))
                     }
                 }
             }

@@ -133,11 +133,11 @@ class SerialScreen(parent: Screen?) :
 
     private fun refreshButtonActive() {
         saveButton?.active = SerialManager.hasConfig()
-        connectButton?.active = SerialManager.hasConfig() && !SerialManager.isConnected
+        connectButton?.active = SerialManager.hasConfig() && SerialManager.portIsOpen() && !SerialManager.isConnected
         disconnectButton?.active = SerialManager.isConnected
     }
 
-    private fun refreshScreen() {
+    fun refreshScreen() {
         client?.setScreen(SerialScreen(parent))
     }
 }
