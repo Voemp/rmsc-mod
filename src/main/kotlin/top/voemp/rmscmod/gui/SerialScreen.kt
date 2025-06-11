@@ -10,6 +10,7 @@ import net.minecraft.client.gui.widget.GridWidget
 import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
 import top.voemp.rmscmod.gui.component.LabeledFieldWidget
+import top.voemp.rmscmod.serial.DataManager
 import top.voemp.rmscmod.serial.SerialManager
 
 class SerialScreen(parent: Screen?) :
@@ -107,6 +108,8 @@ class SerialScreen(parent: Screen?) :
 
     private fun onConnect() {
         if (client == null || !SerialManager.openPort()) return
+        DataManager.init()
+        while (SerialManager.isAvailable()) SerialManager.read()
         SerialManager.startSerialListener(client!!)
         refreshScreen()
     }

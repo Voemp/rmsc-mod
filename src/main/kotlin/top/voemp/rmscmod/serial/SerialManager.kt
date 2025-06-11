@@ -16,7 +16,6 @@ import java.nio.file.Path
 
 object SerialManager {
     private var serialPort: SerialPort? = null
-    private var serialScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
     val serialConfig: SerialConfig = loadConfig()
     val lastSerialConfig: SerialConfig = loadConfig()
 
@@ -49,6 +48,10 @@ object SerialManager {
         return serialPort?.isOpen ?: false
     }
 
+    fun isAvailable(): Boolean {
+        return (serialPort?.bytesAvailable() ?: 0) > 0
+    }
+
     fun openPort(): Boolean {
         serialPort = SerialPort.getCommPort(serialConfig.portDescriptor)
         serialPort?.baudRate = serialConfig.baudRate
@@ -62,11 +65,11 @@ object SerialManager {
 
     fun read(): List<Byte>? {
         val port = serialPort ?: return null
-        val buffer = ByteArray(1024)
+        val buffer = ByteArray(64)
         port.readBytes(buffer, buffer.size, 0)
         val start = buffer.indexOf('&'.code.toByte())
         val end = buffer.indexOf('\n'.code.toByte())
-        return if (start >= 0 && end >= 0) buffer.slice(start + 1 until end) else null
+        return if (start < end) buffer.slice(start + 1 until end) else null
     }
 
     fun write(data: List<Byte>) {
@@ -74,18 +77,20 @@ object SerialManager {
     }
 
     fun startSerialListener(client: MinecraftClient) {
-        serialScope.launch {
+        CoroutineScope(Dispatchers.IO).launch {
             while (isConnected()) {
                 Thread.sleep(100)
                 val data = read()
-                if (data == null || data.isEmpty()) continue
-                client.execute {
-                    logger.info("Received data: $data")
-                    when (data[0]) {
-                        1.toByte(), 2.toByte(), 3.toByte() -> write(lineOf("黏液球 65").toConfigData())
-                        4.toByte(), 5.toByte() -> write(lineOf("黏液球 64").toConfigData())
-                        6.toByte() -> write(lineOf("凋零骷髅头颅 162.3K").toConfigData())
-                    }
+                if (data == null) continue
+                logger.info("Received data: $data")
+                when (data[0]) {
+                    1.toByte() -> DataManager.refreshPage()
+                    2.toByte() -> DataManager.nextPage()
+                    3.toByte() -> DataManager.prevPage()
+                    4.toByte() -> DataManager.nextLine()
+                    5.toByte() -> DataManager.prevLine()
+                    6.toByte() -> DataManager.moreLine()
+                    7.toByte() -> write(lineOf("1").toConfigData())
                 }
             }
             logger.info("Serial listener stopped")

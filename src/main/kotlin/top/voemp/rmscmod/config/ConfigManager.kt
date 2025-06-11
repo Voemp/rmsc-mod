@@ -5,6 +5,7 @@ import net.fabricmc.loader.api.FabricLoader
 import net.minecraft.text.Text
 import top.voemp.rmscmod.RMSCMod.MOD_ID
 import top.voemp.rmscmod.selection.SelectionManager
+import top.voemp.rmscmod.serial.DataManager
 import top.voemp.rmscmod.util.LevelIdentityProvider
 import java.nio.file.Files
 import java.nio.file.Path
@@ -51,6 +52,7 @@ object ConfigManager {
         val configFile = configDir().resolve("${config.name}.json")
         Files.writeString(configFile, Gson().toJson(config))
         resetConfig()
+        DataManager.getConfigData()
     }
 
     fun loadConfig(name: String): ModConfig? {
@@ -84,6 +86,7 @@ object ConfigManager {
 
     fun deleteConfig(name: String) {
         Files.deleteIfExists(configDir().resolve("$name.json"))
+        DataManager.getConfigData()
     }
 
     fun resetConfig() {
