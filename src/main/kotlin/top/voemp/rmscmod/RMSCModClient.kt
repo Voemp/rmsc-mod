@@ -16,13 +16,11 @@ import top.voemp.rmscmod.render.HudRender
 import top.voemp.rmscmod.render.WorldRender
 import top.voemp.rmscmod.selection.SelectionManager
 import top.voemp.rmscmod.serial.FontBitmap
-import top.voemp.rmscmod.serial.SerialManager
 import top.voemp.rmscmod.tag.ModBlockTags
 
 object RMSCModClient : ClientModInitializer {
     override fun onInitializeClient() {
         FontBitmap.init()  // 初始化字体
-        SerialManager.init()  // 初始化串口
 
         ModBlockTags.registerModBlockTags()
         ModKeyBinding.registerKeyBindings()

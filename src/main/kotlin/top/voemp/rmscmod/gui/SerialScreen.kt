@@ -19,7 +19,6 @@ class SerialScreen(parent: Screen?) :
         private val ENTER_BAUD_RATE = Text.translatable("menu.rmscmod.serialScreen.enterBaudRate")
     }
 
-    private var saveButton: ButtonWidget? = null
     private var connectButton: ButtonWidget? = null
     private var disconnectButton: ButtonWidget? = null
 
@@ -46,12 +45,8 @@ class SerialScreen(parent: Screen?) :
             SerialManager.serialConfig.baudRate = baudRate
             refreshButtonActive()
         }
-        saveButton = ButtonWidget.builder(
-            Text.translatable("menu.rmscmod.serialScreen.save")
-        ) { onSave() }.width(120).build()
         grid.add(portDescriptorField)
         grid.add(baudRateField)
-        grid.add(saveButton)
     }
 
     override fun initFooter() {
@@ -105,36 +100,29 @@ class SerialScreen(parent: Screen?) :
         RenderSystem.disableBlend()
     }
 
-    private fun onSave() {
-        SerialManager.saveConfig()
-        if (SerialManager.portIsOpen()) {
-            SerialManager.closePort()
-            Thread.sleep(1000)
-        }
-        SerialManager.openPort()
-        refreshScreen()
+    override fun close() {
+        super.close()
+        if (SerialManager.serialConfig != SerialManager.lastSerialConfig) SerialManager.saveConfig()
     }
 
     private fun onConnect() {
-        if (client == null) return
-        SerialManager.isConnected = true
+        if (client == null || !SerialManager.openPort()) return
         SerialManager.startSerialListener(client!!)
         refreshScreen()
     }
 
     private fun onDisconnect() {
-        SerialManager.isConnected = false
+        SerialManager.closePort()
         refreshScreen()
     }
 
     private fun onDone() {
-        client?.setScreen(parent)
+        close()
     }
 
     private fun refreshButtonActive() {
-        saveButton?.active = SerialManager.hasConfig()
-        connectButton?.active = SerialManager.hasConfig() && SerialManager.portIsOpen() && !SerialManager.isConnected
-        disconnectButton?.active = SerialManager.isConnected
+        connectButton?.active = SerialManager.hasConfig() && !SerialManager.isConnected()
+        disconnectButton?.active = SerialManager.isConnected()
     }
 
     fun refreshScreen() {

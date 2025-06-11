@@ -202,7 +202,7 @@ class EditConfigScreen(parent: Screen?) :
 
     private fun onDone() {
         if (parent is ConfigListScreen) (parent as ConfigListScreen).refreshScreen()
-        else client?.setScreen(parent)
+        else close()
     }
 
     private fun refreshScreen() {

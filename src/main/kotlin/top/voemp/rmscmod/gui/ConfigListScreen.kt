@@ -82,7 +82,7 @@ class ConfigListScreen(parent: Screen?) :
     }
 
     private fun onDone() {
-        client?.setScreen(parent)
+        close()
     }
 
     /**

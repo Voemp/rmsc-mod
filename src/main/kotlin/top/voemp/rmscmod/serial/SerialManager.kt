@@ -10,21 +10,15 @@ import net.minecraft.client.MinecraftClient
 import top.voemp.rmscmod.RMSCMod.MOD_ID
 import top.voemp.rmscmod.RMSCMod.logger
 import top.voemp.rmscmod.serial.DataUtils.lineOf
+import top.voemp.rmscmod.serial.DataUtils.toConfigData
 import java.nio.file.Files
 import java.nio.file.Path
 
 object SerialManager {
     private var serialPort: SerialPort? = null
     private var serialScope: CoroutineScope = CoroutineScope(Dispatchers.IO)
-    var serialConfig: SerialConfig = SerialConfig()
-    var isConnected = false
-
-    fun init() {
-        serialScope.launch {
-            serialConfig = loadConfig()
-            openPort()
-        }
-    }
+    val serialConfig: SerialConfig = loadConfig()
+    val lastSerialConfig: SerialConfig = loadConfig()
 
     private fun configDir(): Path {
         val configDir = FabricLoader.getInstance().configDir.resolve(MOD_ID)
@@ -35,9 +29,12 @@ object SerialManager {
     fun saveConfig() {
         val configFile = configDir().resolve("serial_config.json")
         Files.writeString(configFile, Gson().toJson(serialConfig))
+        lastSerialConfig.portDescriptor = serialConfig.portDescriptor
+        lastSerialConfig.baudRate = serialConfig.baudRate
+        logger.info("Serial config saved")
     }
 
-    private fun loadConfig(): SerialConfig {
+    fun loadConfig(): SerialConfig {
         val configFile = configDir().resolve("serial_config.json")
         return if (Files.exists(configFile)) {
             Gson().fromJson(Files.readString(configFile), SerialConfig::class.java)
@@ -48,7 +45,7 @@ object SerialManager {
         return serialConfig.portDescriptor.isNotEmpty() && serialConfig.baudRate > 0
     }
 
-    fun portIsOpen(): Boolean {
+    fun isConnected(): Boolean {
         return serialPort?.isOpen ?: false
     }
 
@@ -67,8 +64,8 @@ object SerialManager {
         val port = serialPort ?: return null
         val buffer = ByteArray(1024)
         port.readBytes(buffer, buffer.size, 0)
-        val start = buffer.indexOf(38.toByte())
-        val end = buffer.indexOf(10.toByte())
+        val start = buffer.indexOf('&'.code.toByte())
+        val end = buffer.indexOf('\n'.code.toByte())
         return if (start >= 0 && end >= 0) buffer.slice(start + 1 until end) else null
     }
 
@@ -78,16 +75,16 @@ object SerialManager {
 
     fun startSerialListener(client: MinecraftClient) {
         serialScope.launch {
-            while (portIsOpen() && isConnected) {
+            while (isConnected()) {
                 Thread.sleep(100)
                 val data = read()
                 if (data == null || data.isEmpty()) continue
                 client.execute {
                     logger.info("Received data: $data")
                     when (data[0]) {
-                        1.toByte(), 2.toByte(), 3.toByte() -> write(lineOf("黏液球 65"))
-                        4.toByte(), 5.toByte() -> write(lineOf("黏液球 64"))
-                        6.toByte() -> write(lineOf("凋零骷髅头颅 162.3K"))
+                        1.toByte(), 2.toByte(), 3.toByte() -> write(lineOf("黏液球 65").toConfigData())
+                        4.toByte(), 5.toByte() -> write(lineOf("黏液球 64").toConfigData())
+                        6.toByte() -> write(lineOf("凋零骷髅头颅 162.3K").toConfigData())
                     }
                 }
             }
