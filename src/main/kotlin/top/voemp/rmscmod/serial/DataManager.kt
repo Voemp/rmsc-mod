@@ -15,6 +15,7 @@ object DataManager {
     private val placeholderLine: List<List<Any>> = listOf(PLACEHOLDER_CONFIG, PLACEHOLDER_ITEM)
 
     private var page: Int = -1
+    private var curLine = 0
     private var compareAns: MutableList<Boolean> = mutableListOf()
     private var forceRefresh = false
     private var changeResult = false
@@ -74,7 +75,7 @@ object DataManager {
         }
     }
 
-     private fun clearData() {
+    private fun clearData() {
         page = -1
         compareAns = mutableListOf()
         pageCache[0] = listOf()
@@ -84,6 +85,7 @@ object DataManager {
     }
 
     fun refreshPage() {
+        if (page == 1) getInventoryData((pageCache[0][curLine] as SimplifyConfig).name)
         if (forceRefresh) {
             compareAns = mutableListOf(true, true, true, true)
             forceRefresh = false
@@ -104,7 +106,7 @@ object DataManager {
         pageData[1] = listOf()
         pageCache[1] = listOf()
         pageIndex[1] = 0
-        getInventoryData((pageCache[0][lineIndex] as SimplifyConfig).name)
+        curLine = lineIndex
         refreshPage()
     }
 

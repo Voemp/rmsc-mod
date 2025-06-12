@@ -5,6 +5,11 @@ plugins {
     id 'fabric-loom' version "${loom_version}"
     id 'maven-publish'
     id "org.jetbrains.kotlin.jvm" version "2.1.20"
+    id "com.gradleup.shadow" version "9.0.0-beta14"
+}
+
+configurations {
+    shadowOnly
 }
 
 version = project.mod_version
@@ -40,6 +45,17 @@ dependencies {
 
     // 串口通信
     implementation "com.fazecast:jSerialComm:${project.jSerialComm_version}"
+    shadowOnly "com.fazecast:jSerialComm:${project.jSerialComm_version}"
+}
+
+shadowJar {
+    configurations = [project.configurations.shadowOnly]
+    archiveClassifier.set("all")
+}
+
+remapJar {
+    dependsOn shadowJar
+    input = shadowJar.archiveFile
 }
 
 processResources {
