@@ -56,15 +56,15 @@ object ModPayloads {
         override fun getId(): CustomPayload.Id<out CustomPayload> = ID
     }
 
-    data class SwitchStatusS2CPayload(val switchStatus: Boolean) : CustomPayload {
+    data class SwitchChangeResultS2CPayload(val changeResult: Boolean) : CustomPayload {
         companion object {
             private val SWITCH_STATUS_PACKET_ID: Identifier = Identifier.of(MOD_ID, "switch_status")
-            val ID = CustomPayload.Id<SwitchStatusS2CPayload>(SWITCH_STATUS_PACKET_ID)
-            val CODEC: PacketCodec<RegistryByteBuf, SwitchStatusS2CPayload> =
+            val ID = CustomPayload.Id<SwitchChangeResultS2CPayload>(SWITCH_STATUS_PACKET_ID)
+            val CODEC: PacketCodec<RegistryByteBuf, SwitchChangeResultS2CPayload> =
                 PacketCodec.tuple(
                     PacketCodecs.BOOL,
-                    { it.switchStatus },
-                    ::SwitchStatusS2CPayload
+                    { it.changeResult },
+                    ::SwitchChangeResultS2CPayload
                 )
         }
 
@@ -75,6 +75,6 @@ object ModPayloads {
         PayloadTypeRegistry.playC2S().register(AreaSelectionC2SPayload.ID, AreaSelectionC2SPayload.CODEC)
         PayloadTypeRegistry.playS2C().register(ItemListS2CPayload.ID, ItemListS2CPayload.CODEC)
         PayloadTypeRegistry.playC2S().register(SwitchListC2SPayload.ID, SwitchListC2SPayload.CODEC)
-        PayloadTypeRegistry.playS2C().register(SwitchStatusS2CPayload.ID, SwitchStatusS2CPayload.CODEC)
+        PayloadTypeRegistry.playS2C().register(SwitchChangeResultS2CPayload.ID, SwitchChangeResultS2CPayload.CODEC)
     }
 }

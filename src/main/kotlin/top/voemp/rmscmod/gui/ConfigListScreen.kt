@@ -2,7 +2,6 @@ package top.voemp.rmscmod.gui
 
 import net.fabricmc.api.EnvType
 import net.fabricmc.api.Environment
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking
 import net.minecraft.client.MinecraftClient
 import net.minecraft.client.gui.DrawContext
 import net.minecraft.client.gui.screen.Screen
@@ -12,11 +11,8 @@ import net.minecraft.client.gui.widget.ButtonWidget
 import net.minecraft.client.gui.widget.DirectionalLayoutWidget
 import net.minecraft.screen.ScreenTexts
 import net.minecraft.text.Text
-import net.minecraft.util.Util
 import top.voemp.rmscmod.config.ConfigManager
 import top.voemp.rmscmod.config.ModConfig
-import top.voemp.rmscmod.network.ModPayloads
-import top.voemp.rmscmod.serial.DataManager
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -121,7 +117,7 @@ class ConfigListScreen(parent: Screen?) :
         @Environment(EnvType.CLIENT)
         inner class ConfigEntry(val config: ModConfig) : Entry<ConfigEntry?>() {
             val name: String = config.name
-            var clickTime: Long = 0
+//            var clickTime: Long = 0
             val formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy/MM/dd HH:mm")
             val timeText: Text? = Text.of(
                 LocalDateTime.ofInstant(Instant.ofEpochMilli(config.time), ZoneId.systemDefault())
@@ -186,15 +182,8 @@ class ConfigListScreen(parent: Screen?) :
 
             override fun mouseClicked(mouseX: Double, mouseY: Double, button: Int): Boolean {
                 setSelected(this)
-                if (Util.getMeasuringTimeMs() - clickTime < 250L) {
-                    DataManager.getConfigData()
-                    DataManager.getInventoryData(config.name)
-                    config.switchSet?.let {
-                        val payload = ModPayloads.SwitchListC2SPayload(it.toList())
-                        ClientPlayNetworking.send(payload)
-                    }
-                }
-                clickTime = Util.getMeasuringTimeMs()
+//                if (Util.getMeasuringTimeMs() - clickTime < 250L) { }
+//                clickTime = Util.getMeasuringTimeMs()
                 return super.mouseClicked(mouseX, mouseY, button)
             }
 

@@ -6,7 +6,7 @@ import top.voemp.rmscmod.selection.BlockPosWithWorld
 data class ModConfig(
     val name: String,
     val time: Long,
-    val switchStatus: Boolean,
+    var switchStatus: Boolean,
     val areaSelection: AreaPosWithWorld?,
     val switchSet: Set<BlockPosWithWorld>?
 )

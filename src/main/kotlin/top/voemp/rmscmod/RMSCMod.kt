@@ -6,7 +6,6 @@ import net.minecraft.util.ActionResult
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import top.voemp.rmscmod.network.ModPayloads
-import top.voemp.rmscmod.serial.FontBitmap
 import top.voemp.rmscmod.util.InteractionUtils
 import top.voemp.rmscmod.util.InventoryUtils
 
@@ -27,12 +26,12 @@ object RMSCMod : ModInitializer {
 
         ServerPlayNetworking.registerGlobalReceiver(ModPayloads.SwitchListC2SPayload.ID) { payload, context ->
             context.server().execute {
-                var switchStatus = true
+                var changeResult = true
                 payload.switchList.forEach { switch ->
                     val result = InteractionUtils.changeSwitch(context.server(), switch)
-                    switchStatus = result == ActionResult.CONSUME && switchStatus
+                    changeResult = result == ActionResult.CONSUME && changeResult
                 }
-                ServerPlayNetworking.send(context.player(), ModPayloads.SwitchStatusS2CPayload(switchStatus))
+                ServerPlayNetworking.send(context.player(), ModPayloads.SwitchChangeResultS2CPayload(changeResult))
             }
         }
     }

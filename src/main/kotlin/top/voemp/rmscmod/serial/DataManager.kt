@@ -40,13 +40,30 @@ object DataManager {
 
     fun getInventoryData(name: String) {
         val config = ConfigManager.loadConfig(name)
-        if (config?.areaSelection == null) return
-
-        ClientPlayNetworking.send(ModPayloads.AreaSelectionC2SPayload(config.areaSelection))
-        ClientPlayNetworking.registerGlobalReceiver(ModPayloads.ItemListS2CPayload.ID) { payload, context ->
-            if (context.client().world == null) return@registerGlobalReceiver
-            pageData[1] = payload.itemList
+        config?.areaSelection?.let {
+            ClientPlayNetworking.send(ModPayloads.AreaSelectionC2SPayload(it))
+            ClientPlayNetworking.registerGlobalReceiver(ModPayloads.ItemListS2CPayload.ID) { payload, context ->
+                if (context.client().world == null) return@registerGlobalReceiver
+                pageData[1] = payload.itemList
+            }
+            Thread.sleep(50)
         }
+    }
+
+    fun changeSwitchStatus(name: String): Boolean {
+        var result = false
+        val config = ConfigManager.loadConfig(name)
+        config?.switchSet?.let {
+            ClientPlayNetworking.send(ModPayloads.SwitchListC2SPayload(it.toList()))
+            ClientPlayNetworking.registerGlobalReceiver(ModPayloads.SwitchChangeResultS2CPayload.ID) { payload, context ->
+                if (context.client().world == null || !payload.changeResult) return@registerGlobalReceiver
+                config.switchStatus = !config.switchStatus
+                ConfigManager.saveConfig(config)
+                result = true
+            }
+            Thread.sleep(50)
+        }
+        return result
     }
 
     fun clearData() {
