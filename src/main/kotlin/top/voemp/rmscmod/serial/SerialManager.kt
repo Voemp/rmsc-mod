@@ -69,7 +69,7 @@ object SerialManager {
         port.readBytes(buffer, buffer.size, 0)
         val start = buffer.indexOf('&'.code.toByte())
         val end = buffer.indexOf('\n'.code.toByte())
-        return if (start < end) buffer.slice(start + 1 until end) else null
+        return if (start + 1 < end) buffer.slice(start + 1 until end) else null
     }
 
     fun write(data: List<Byte>) {

@@ -7,20 +7,19 @@ import top.voemp.rmscmod.serial.DataUtils.lineEmpty
 import top.voemp.rmscmod.serial.DataUtils.lineOf
 import top.voemp.rmscmod.serial.DataUtils.lineUnchanged
 import top.voemp.rmscmod.serial.DataUtils.toConfigData
+import top.voemp.rmscmod.serial.DataUtils.toInventoryData
 
 object DataManager {
     private val PLACEHOLDER_CONFIG = listOf(SimplifyConfig("§", 0))
+    private val PLACEHOLDER_ITEM = listOf("§")
 
-    private var configData: List<SimplifyConfig> = listOf()
-    private var inventoryData: List<String> = listOf()
-
-    private var curPage: Int = 0
+    private var page: Int = -1
     private var compareAns: MutableList<Boolean> = mutableListOf()
+    private val placeholderLine: List<List<Any>> = listOf(PLACEHOLDER_CONFIG, PLACEHOLDER_ITEM)
 
-    private var page1Cache: List<SimplifyConfig> = listOf()
-    private var page1Index = 0
-    private var page2Cache: List<String> = listOf()
-    private var page2Index = 0
+    private val pageData: MutableList<List<Any>> = mutableListOf(listOf(), listOf())
+    private val pageCache: MutableList<List<Any>> = mutableListOf(listOf(), listOf())
+    private val pageIndex: MutableList<Int> = mutableListOf(0, 0)
 
     fun init() {
         getConfigData()
@@ -28,7 +27,7 @@ object DataManager {
     }
 
     fun getConfigData() {
-        configData = ConfigManager.loadAllConfigs().map {
+        pageData[0] = ConfigManager.loadAllConfigs().map {
             SimplifyConfig(
                 name = it.name,
                 status = 0
@@ -46,76 +45,62 @@ object DataManager {
         ClientPlayNetworking.send(ModPayloads.AreaSelectionC2SPayload(config.areaSelection))
         ClientPlayNetworking.registerGlobalReceiver(ModPayloads.ItemListS2CPayload.ID) { payload, context ->
             if (context.client().world == null) return@registerGlobalReceiver
-            inventoryData = payload.itemList
+            pageData[1] = payload.itemList
         }
     }
 
     fun clearData() {
-        page1Cache = listOf()
-        page1Index = 0
-        page2Cache = listOf()
-        page2Index = 0
-        curPage = 0
+        page = -1
         compareAns = mutableListOf()
+        pageCache[0] = listOf()
+        pageCache[1] = listOf()
+        pageIndex[0] = 0
+        pageIndex[1] = 0
     }
 
     fun refreshPage() {
-        when (curPage) {
-            1 -> {
-                compareAns = compareCache(page1Cache, page1Index, configData)
-                println(compareAns)
-                page1Cache = configData.drop(page1Index).take(4)
-                val message = makeMessage(page1Index, configData).toConfigData()
-                SerialManager.write(message)
-                println(page1Cache)
-                println(message)
-            }
-        }
+        compareAns = compareCache(pageCache[page], pageIndex[page], pageData[page])
+        println(compareAns)
+        pageCache[page] = pageData[page].drop(pageIndex[page]).take(4)
+        println(pageCache[page])
+
+        val message = makeMessage(pageIndex[page], pageData[page]).toCurrentData()
+        SerialManager.write(message)
+        println(message)
     }
 
     fun nextPage() {
-        curPage++
-        if (curPage == 2) {
-            page2Cache = listOf()
-            page2Index = 0
+        page++
+        if (page == 1) {
+            getInventoryData((pageCache[0][0] as SimplifyConfig).name)
+            pageCache[1] = listOf()
+            pageIndex[1] = 0
         }
         refreshPage()
     }
 
     fun prevPage() {
-        curPage--
+        page--
         refreshPage()
     }
 
     fun moreLine() {
-        when (curPage) {
-            1 -> {
-                SerialManager.write(makeMessage(page1Index, configData).toConfigData())
-            }
-        }
+        SerialManager.write(makeMessage(pageIndex[page], pageData[page]).toCurrentData())
     }
 
     fun nextLine() {
-        when (curPage) {
-            1 -> {
-                if (page1Index < configData.size - 4) page1Index++
-                page1Cache = page1Cache.drop(1).take(3)
-                refreshPage()
-            }
-        }
+        if (pageIndex[page] < pageData[page].size - 4) pageIndex[page]++
+        pageCache[page] = pageCache[page].drop(1).take(3)
+        refreshPage()
     }
 
     fun prevLine() {
-        when (curPage) {
-            1 -> {
-                if (page1Index > 0) page1Index--
-                page1Cache = PLACEHOLDER_CONFIG + page1Cache.drop(0).take(3)
-                refreshPage()
-            }
-        }
+        if (pageIndex[page] > 0) pageIndex[page]--
+        pageCache[page] = placeholderLine[page] + pageCache[page].drop(0).take(3)
+        refreshPage()
     }
 
-    fun makeMessage(index: Int, data: List<Any>): List<Byte> {
+    private fun makeMessage(index: Int, data: List<Any>): List<Byte> {
         val message = mutableListOf<Byte>()
         while (compareAns.isNotEmpty()) {
             val index = index + 4 - compareAns.size
@@ -133,7 +118,7 @@ object DataManager {
         return message
     }
 
-    fun compareCache(cache: List<Any>, index: Int, data: List<Any>): MutableList<Boolean> {
+    private fun compareCache(cache: List<Any>, index: Int, data: List<Any>): MutableList<Boolean> {
         val ans = mutableListOf<Boolean>()
         for (i in index until index + 4) {
             if (i >= data.size && i - index >= cache.size) ans.add(false)
@@ -141,5 +126,13 @@ object DataManager {
             else ans.add(cache[i - index] != data[i])
         }
         return ans
+    }
+
+    private fun List<Byte>.toCurrentData(): List<Byte> {
+        return when (page) {
+            0 -> this.toConfigData()
+            1 -> this.toInventoryData()
+            else -> this
+        }
     }
 }
