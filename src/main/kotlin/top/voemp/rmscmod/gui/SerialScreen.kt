@@ -110,7 +110,7 @@ class SerialScreen(parent: Screen?) :
         if (client == null || !SerialManager.openPort()) return
         DataManager.init()
         while (SerialManager.isAvailable()) SerialManager.read()
-        SerialManager.startSerialListener(client!!)
+        SerialManager.startSerialListener()
         refreshScreen()
     }
 

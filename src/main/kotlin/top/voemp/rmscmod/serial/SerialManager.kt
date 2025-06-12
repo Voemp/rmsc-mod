@@ -6,11 +6,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import net.fabricmc.loader.api.FabricLoader
-import net.minecraft.client.MinecraftClient
 import top.voemp.rmscmod.RMSCMod.MOD_ID
 import top.voemp.rmscmod.RMSCMod.logger
-import top.voemp.rmscmod.serial.DataUtils.lineOf
-import top.voemp.rmscmod.serial.DataUtils.toConfigData
 import java.nio.file.Files
 import java.nio.file.Path
 
@@ -76,7 +73,7 @@ object SerialManager {
         serialPort?.writeBytes(data.toByteArray(), data.size)
     }
 
-    fun startSerialListener(client: MinecraftClient) {
+    fun startSerialListener() {
         CoroutineScope(Dispatchers.IO).launch {
             while (isConnected()) {
                 Thread.sleep(100)
@@ -85,12 +82,12 @@ object SerialManager {
                 logger.info("Received data: $data")
                 when (data[0]) {
                     1.toByte() -> DataManager.refreshPage()
-                    2.toByte() -> DataManager.nextPage()
-                    3.toByte() -> DataManager.prevPage()
+                    2.toByte() -> DataManager.toPage0()
+                    3.toByte() -> DataManager.toPage1(data[1].toInt())
                     4.toByte() -> DataManager.nextLine()
                     5.toByte() -> DataManager.prevLine()
                     6.toByte() -> DataManager.moreLine()
-                    7.toByte() -> write(lineOf("1").toConfigData())
+                    7.toByte() -> DataManager.toggleSwitch(data[1].toInt())
                 }
             }
             logger.info("Serial listener stopped")

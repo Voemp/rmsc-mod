@@ -13,12 +13,14 @@ import top.voemp.rmscmod.option.ModKeyBinding
 import top.voemp.rmscmod.render.HudRender
 import top.voemp.rmscmod.render.WorldRender
 import top.voemp.rmscmod.selection.SelectionManager
+import top.voemp.rmscmod.serial.DataManager
 import top.voemp.rmscmod.serial.FontBitmap
 import top.voemp.rmscmod.tag.ModBlockTags
 
 object RMSCModClient : ClientModInitializer {
     override fun onInitializeClient() {
         FontBitmap.init()  // 初始化字体
+        DataManager.registerDataManagerReceiver()  // 注册数据接收器
 
         ModBlockTags.registerModBlockTags()
         ModKeyBinding.registerKeyBindings()

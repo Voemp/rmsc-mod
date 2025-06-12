@@ -12,10 +12,12 @@ import top.voemp.rmscmod.serial.DataUtils.toInventoryData
 object DataManager {
     private val PLACEHOLDER_CONFIG = listOf(SimplifyConfig("§", 0))
     private val PLACEHOLDER_ITEM = listOf("§")
+    private val placeholderLine: List<List<Any>> = listOf(PLACEHOLDER_CONFIG, PLACEHOLDER_ITEM)
 
     private var page: Int = -1
     private var compareAns: MutableList<Boolean> = mutableListOf()
-    private val placeholderLine: List<List<Any>> = listOf(PLACEHOLDER_CONFIG, PLACEHOLDER_ITEM)
+    private var forceRefresh = false
+    private var changeResult = false
 
     private val pageData: MutableList<List<Any>> = mutableListOf(listOf(), listOf())
     private val pageCache: MutableList<List<Any>> = mutableListOf(listOf(), listOf())
@@ -38,35 +40,41 @@ object DataManager {
         }
     }
 
-    fun getInventoryData(name: String) {
+    private fun getInventoryData(name: String) {
         val config = ConfigManager.loadConfig(name)
         config?.areaSelection?.let {
             ClientPlayNetworking.send(ModPayloads.AreaSelectionC2SPayload(it))
-            ClientPlayNetworking.registerGlobalReceiver(ModPayloads.ItemListS2CPayload.ID) { payload, context ->
-                if (context.client().world == null) return@registerGlobalReceiver
-                pageData[1] = payload.itemList
-            }
             Thread.sleep(50)
         }
     }
 
-    fun changeSwitchStatus(name: String): Boolean {
-        var result = false
+    private fun changeSwitchStatus(name: String) {
         val config = ConfigManager.loadConfig(name)
         config?.switchSet?.let {
             ClientPlayNetworking.send(ModPayloads.SwitchListC2SPayload(it.toList()))
-            ClientPlayNetworking.registerGlobalReceiver(ModPayloads.SwitchChangeResultS2CPayload.ID) { payload, context ->
-                if (context.client().world == null || !payload.changeResult) return@registerGlobalReceiver
-                config.switchStatus = !config.switchStatus
-                ConfigManager.saveConfig(config)
-                result = true
+            var timer = 100
+            while (timer > 0 && !changeResult) {
+                Thread.sleep(50)
+                timer--
             }
-            Thread.sleep(50)
+            if (!changeResult) return
+            config.switchStatus = !config.switchStatus
+            ConfigManager.saveConfig(config)
         }
-        return result
     }
 
-    fun clearData() {
+    fun registerDataManagerReceiver() {
+        ClientPlayNetworking.registerGlobalReceiver(ModPayloads.ItemListS2CPayload.ID) { payload, context ->
+            if (context.client().world == null) return@registerGlobalReceiver
+            pageData[1] = payload.itemList
+        }
+        ClientPlayNetworking.registerGlobalReceiver(ModPayloads.SwitchChangeResultS2CPayload.ID) { payload, context ->
+            if (context.client().world == null || !payload.changeResult) return@registerGlobalReceiver
+            changeResult = true
+        }
+    }
+
+     private fun clearData() {
         page = -1
         compareAns = mutableListOf()
         pageCache[0] = listOf()
@@ -76,28 +84,27 @@ object DataManager {
     }
 
     fun refreshPage() {
-        compareAns = compareCache(pageCache[page], pageIndex[page], pageData[page])
-        println(compareAns)
+        if (forceRefresh) {
+            compareAns = mutableListOf(true, true, true, true)
+            forceRefresh = false
+        } else compareAns = compareCache(pageCache[page], pageIndex[page], pageData[page])
         pageCache[page] = pageData[page].drop(pageIndex[page]).take(4)
-        println(pageCache[page])
-
-        val message = makeMessage(pageIndex[page], pageData[page]).toCurrentData()
-        SerialManager.write(message)
-        println(message)
+        SerialManager.write(makeMessage(pageIndex[page], pageData[page]).toCurrentData())
     }
 
-    fun nextPage() {
-        page++
-        if (page == 1) {
-            getInventoryData((pageCache[0][0] as SimplifyConfig).name)
-            pageCache[1] = listOf()
-            pageIndex[1] = 0
-        }
+    fun toPage0() {
+        page = 0
+        forceRefresh = true
         refreshPage()
     }
 
-    fun prevPage() {
-        page--
+    fun toPage1(lineIndex: Int) {
+        page = 1
+        forceRefresh = true
+        pageData[1] = listOf()
+        pageCache[1] = listOf()
+        pageIndex[1] = 0
+        getInventoryData((pageCache[0][lineIndex] as SimplifyConfig).name)
         refreshPage()
     }
 
@@ -115,6 +122,19 @@ object DataManager {
         if (pageIndex[page] > 0) pageIndex[page]--
         pageCache[page] = placeholderLine[page] + pageCache[page].drop(0).take(3)
         refreshPage()
+    }
+
+    fun toggleSwitch(lineIndex: Int) {
+        val curConfig = pageCache[0][lineIndex] as SimplifyConfig
+        changeSwitchStatus(curConfig.name)
+        var newStatus = curConfig.status
+        if (changeResult) {
+            if (curConfig.status % 2 == 0) newStatus++
+            else newStatus--
+            curConfig.status = newStatus
+            changeResult = false
+        }
+        SerialManager.write(listOf(newStatus.toByte()).toCurrentData())
     }
 
     private fun makeMessage(index: Int, data: List<Any>): List<Byte> {

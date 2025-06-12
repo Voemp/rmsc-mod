@@ -2,5 +2,5 @@ package top.voemp.rmscmod.serial
 
 data class SimplifyConfig(
     val name: String,
-    val status: Int
+    var status: Int
 )
