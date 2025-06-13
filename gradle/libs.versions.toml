@@ -1,0 +1,33 @@
+# gradle/libs.versions.toml
+
+[versions]
+# Fabric Properties
+# check these on https://fabricmc.net/develop
+minecraft = "1.21.1"
+yarn = "1.21.1+build.3"
+loader = "0.16.14"
+loom = "1.10-SNAPSHOT"
+fabricKotlin = "1.13.2+kotlin.2.1.20"
+
+# Plugins
+kotlin = "2.1.20"
+shadow = "9.0.0-beta14"
+
+# Dependencies
+fabricApi = "0.116.0+1.21.1"
+jSerialComm = "2.11.0"
+
+[libraries]
+minecraft = { group = "com.mojang", name = "minecraft", version.ref = "minecraft" }
+# 注意: yarn 的 :v2 后缀需要在 build.gradle.kts 中单独添加
+# yarn = { group = "net.fabricmc", name = "yarn", version.ref = "yarn" }
+fabric-loader = { group = "net.fabricmc", name = "fabric-loader", version.ref = "loader" }
+fabric-api = { group = "net.fabricmc.fabric-api", name = "fabric-api", version.ref = "fabricApi" }
+fabric-kotlin = { group = "net.fabricmc", name = "fabric-language-kotlin", version.ref = "fabricKotlin" }
+jSerialComm = { group = "com.fazecast", name = "jSerialComm", version.ref = "jSerialComm" }
+
+[plugins]
+maven-publish = { id = "maven-publish" }
+fabric-loom = { id = "fabric-loom", version.ref = "loom" }
+kotlin-jvm = { id = "org.jetbrains.kotlin.jvm", version.ref = "kotlin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadow" }
