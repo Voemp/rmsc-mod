@@ -10,7 +10,7 @@ object ModBlockTags {
     val SWITCH_SELECTION: TagKey<Block?>? = of("switch_selection")
 
     private fun of(id: String): TagKey<Block?>? {
-        return TagKey.of<Block?>(RegistryKeys.BLOCK, Identifier.of(RMSCMod.MOD_ID, id))
+        return TagKey.of(RegistryKeys.BLOCK, Identifier.of(RMSCMod.MOD_ID, id))
     }
 
     fun registerModBlockTags() {}
